@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+    <head>
+		
+        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="description" content="解决一类问题而不是一个问题">
+        <link rel="shortcut icon" href="/images/hhh.jpg"/>
+        <link rel="canonical" href="http://guolinn.com/">
+        <link rel="alternate" type="application/rss+xml" title="flydzt" href="">
+        <title>记一次线程池使用的bad_case | flydzt</title>
+        <meta name="description" content="{{meta_description}}">
+
+        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
+        <meta name="HandheldFriendly" content="True" />
+        <meta name="MobileOptimized" content="320" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+    <meta name="generator" content="Hexo 4.2.0"></head>
+    
+		<body class="post-template">
+	
+
+        <header id="header">
+            <a id="logo" href="/"><img src="/images/hhh.jpg" alt="flydzt" /></a>
+            <h1><a href="/">flydzt</a></h1>
+            <p></p>
+            <div id="follow-icons">
+          <a href="http://github.com/flydzt" target="_blank" rel="noopener"><i class="fa fa-github-square fa-2x"></i></a>
+          </div>
+<h6><a href="/about">About</a></h6>
+        </header>
+
+        <main id="content">
+        
+
+<article class="post">
+  四月 2, 2020
+  
+    <span class="taglist">  &middot; 
+    
+    
+      <a href='/tags/java/'>java</a> 
+    
+      <a href='/tags/thread/'>thread</a> 
+    
+    </span>
+  
+
+  <h1 class="post-title">记一次线程池使用的bad_case</h1>
+  <section class="post-content article-entry">
+    <h2 id="需求"><a href="#需求" class="headerlink" title="需求"></a>需求</h2><p>一个数据上报服务,本地会进行一些预处理.为了减轻下游服务的压力,使用了core:1 max:1的线程池来对请求进行排队.由于数据量慢慢增长,单线程上报跟不上速度.发现产生reject(reject会落本地文件).</p>
+<h2 id="改造"><a href="#改造" class="headerlink" title="改造"></a>改造</h2><p>下游服务改造后,可以增大并发程度.于是改为core:1 max:8并免测上线.上线后根据上报数量曲线发现,抖动非常厉害.也就是说一会儿上报很多,一会儿又上报很少,往复循环.</p>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p>发现是由于KeepAliveTime的值原本只设置了100ms,由于原来只有1个线程,所以没有问题.而增大了max设置后,由于粗心没有看到KeepAliveTime的单位是毫秒.</p>
+<p>在线上由于数据量的不稳定性,会发生大量的线程创建和销毁.</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>如果在持续稳定的压力上,最终线程池能保持一个平衡,此时任务不会排队,如果突发的增加了压力,则需要进行排队,如果压力过大,reject策略需要安全且快速.例如落本地文件,追加操作是非常快的.</p>
+<p>线程池的参数,要根据实际情况来设置.且不能混用线程池.</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">new</span> ThreadPoolExecutor(</span><br><span class="line">        <span class="comment">//core 1 max 8</span></span><br><span class="line">        <span class="number">1</span>, <span class="number">8</span>,</span><br><span class="line">        <span class="number">100</span>, TimeUnit.SECONDS,</span><br><span class="line">        <span class="keyword">new</span> ArrayBlockingQueue&lt;&gt;(<span class="number">1000</span>),</span><br><span class="line">        <span class="keyword">new</span> ThreadFactoryBuilder().setNameFormat(<span class="string">"xxx-%d"</span>).build(),</span><br><span class="line">        (r, executor) -&gt; &#123;</span><br><span class="line">            <span class="comment">//reject处理</span></span><br><span class="line">        &#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="BlockingQueue"><a href="#BlockingQueue" class="headerlink" title="BlockingQueue"></a>BlockingQueue</h2><p>ArrayBlockingQueue实现为一个数组,两个指针来代表入(putIndex)和出(takeIndex).到达尾部,会重新设置到头部.takeIndex不能超过putIndex.所以ArrayBlockQueue是必须要指定容量的.</p>
+<p>为了线程安全,在操作前都需要lock.在阻塞操作时await().被signal()唤醒再次判断是否非空.</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> E <span class="title">takeFirst</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> ReentrantLock lock = <span class="keyword">this</span>.lock;</span><br><span class="line">    lock.lock();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        E x;</span><br><span class="line">        <span class="comment">//使用while 防止醒了发现还是空的</span></span><br><span class="line">        <span class="keyword">while</span> ( (x = unlinkFirst()) == <span class="keyword">null</span>)</span><br><span class="line">            notEmpty.await();</span><br><span class="line">        <span class="keyword">return</span> x;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        lock.unlock();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LinkedBlockingQueue则不必须指定容量,因为链表的性质,可以任意扩容和缩容,可以到达无限长的队列(不推荐). 使用count和capacity来判断队列是否已满.</p>
+
+  </section>
+  <footer class="post-footer">
+    <!--
+    <section class="author">
+      <h4>flydzt</h4>
+      <p></p>
+    </section>
+    -->
+  </footer>
+</article>
+
+<nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/juc%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/">
+        ← prev <!--juc的一些基础知识-->
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/java%E5%B8%B8%E7%94%A8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
+        <!--java常用数据结构--> next →
+    </a>
+    
+</nav>
+
+
+        </main>
+        <footer id="footer">
+            <section id="footer-message">&copy; 2020 flydzt. </section>
+        </footer>
+    </body>
+</html>
+
+

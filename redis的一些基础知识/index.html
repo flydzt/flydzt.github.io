@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+    <head>
+		
+        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="description" content="解决一类问题而不是一个问题">
+        <link rel="shortcut icon" href="/images/hhh.jpg"/>
+        <link rel="canonical" href="http://guolinn.com/">
+        <link rel="alternate" type="application/rss+xml" title="flydzt" href="">
+        <title>redis的一些基础知识 | flydzt</title>
+        <meta name="description" content="{{meta_description}}">
+
+        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
+        <meta name="HandheldFriendly" content="True" />
+        <meta name="MobileOptimized" content="320" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+    <meta name="generator" content="Hexo 4.2.0"></head>
+    
+		<body class="post-template">
+	
+
+        <header id="header">
+            <a id="logo" href="/"><img src="/images/hhh.jpg" alt="flydzt" /></a>
+            <h1><a href="/">flydzt</a></h1>
+            <p></p>
+            <div id="follow-icons">
+          <a href="http://github.com/flydzt" target="_blank" rel="noopener"><i class="fa fa-github-square fa-2x"></i></a>
+          </div>
+<h6><a href="/about">About</a></h6>
+        </header>
+
+        <main id="content">
+        
+
+<article class="post">
+  三月 29, 2020
+  
+    <span class="taglist">  &middot; 
+    
+    
+      <a href='/tags/redis/'>redis</a> 
+    
+      <a href='/tags/cache/'>cache</a> 
+    
+    </span>
+  
+
+  <h1 class="post-title">redis的一些基础知识</h1>
+  <section class="post-content article-entry">
+    <h2 id="redis命令一览-未列举特别常用的"><a href="#redis命令一览-未列举特别常用的" class="headerlink" title="redis命令一览,未列举特别常用的"></a>redis命令一览,未列举特别常用的</h2><table>
+<thead>
+<tr>
+<th>命令</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>dbsize</td>
+<td>key数量</td>
+</tr>
+<tr>
+<td>type</td>
+<td>key种类</td>
+</tr>
+<tr>
+<td>object encoding</td>
+<td>编码(实现)</td>
+</tr>
+<tr>
+<td>hscan/zscan/sscan</td>
+<td>结构中的scan</td>
+</tr>
+<tr>
+<td>pfadd/pfcount/pfmerge</td>
+<td>0.81%误差的统计</td>
+</tr>
+</tbody></table>
+<p>set使用nx可以作为分布式锁.使用ex来防止意外不能手动退出的情况.</p>
+<p>hgetall在field数量多的时候,会阻塞redis.使用hscan来遍历.</p>
+<p>rename会先del旧键.如果旧键较大,会阻塞.通过开启lazyfree-lazy-server-del,将del操作异步化.rename也要注意新旧value在一个slot里.</p>
+<p>可以使用dump和restore来迁移某个键.也可以使用migrate.区别在于前者需要客户端来中转,后者是两个redis之间的通信.</p>
+<p>准确的id统计可以用bitmap,不需要准确只需要计数可以用HyperLogLog(pfadd/pfcount/pfmerge)</p>
+<h2 id="redis典型的使用场景"><a href="#redis典型的使用场景" class="headerlink" title="redis典型的使用场景"></a>redis典型的使用场景</h2><ul>
+<li>缓存</li>
+<li>计数,需要注意数据持久化.计数也可以用来做访问频率等功能.<strong>incr不会更新key的过期时间,但是set会.</strong></li>
+<li>分布式session.按照用户id去做一致性hash,session可以缓存在本地.但在服务节点数量变化的时候,需要redis来做兜底.</li>
+</ul>
+<h2 id="编码"><a href="#编码" class="headerlink" title="编码"></a>编码</h2><p>hash的value不大于64字节,且field数量不超过512个时,采用ziplist,否则使用hashtable.</p>
+<p>list的元素个数小于list-max-ziplist-entries(512)同时值小于list-max-ziplist-value(64)时采用ziplist,否则采用linkedlist.3.2或更新版本的list统一采用quicklist</p>
+<p>set的元素都是整数且元素个数小于set-max-intset-entries(512)使用intset,否则使用hashtable</p>
+<p>zset在元素值不大于64字节,且个数不多于512个时,采用ziplist,否则使用<a href="https://github.com/flydzt/tiny-data-structure/blob/master/Skiplist.hpp" target="_blank" rel="noopener">skiplist</a>.</p>
+<h2 id="慢查询"><a href="#慢查询" class="headerlink" title="慢查询"></a>慢查询</h2><p>slowlog-log-slower-than规定慢于该时间(微妙)的会被记录日志.slowlog-max-len则指定记录日志最长的个数(建议1000以上).可以通过config get 对应设置来查询.</p>
+<p>slowlog get 可以查询对应的日志.日志分为四个部分,标识id,发生时间戳,命令耗时,命令和参数.</p>
+<p>4.0的版本后增加了客户端ip:port和线程号</p>
+<h2 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h2><p>redis提供了multi和exec(discard)命令来执行简单事务.简单在于:错误不会回滚.可以靠lua脚本来弥补这部分功能.也可以依靠lua定制自己的命令.</p>
+<p>redis提供了watch命令,在事务中确保某个key没有被其他客户端修改,如果中间被修改了,则exec返回nil.</p>
+<h2 id="jedis"><a href="#jedis" class="headerlink" title="jedis"></a>jedis</h2><p>Jedis的实现就是持有一个socket.RedisOutputStream以及RedisInputStream包装socket的两个流.不是线程安全的.因为两个线程去write或者read同一个socket必然会有问题.</p>
+<p>RedisOutputStream本地持有一个size为8192的buf.flush的时机为命令结束或者缓冲区满.</p>
+<p>JedisPool使用apache-common包的池化.基本的配置也依靠common里实现.JedisFactory可以创建新的Jedis.getResource会从池中borrowObject,close会returnResource.池化可以让多线程持有不同的client(一线程一socket)来做到线程安全.多线程等待资源的超时默认为无穷大.</p>
+<p>如果是cluster,则是对每个节点维护一个pool.加了一层connectionHandler来计算targetNode.执行完一个命令就会releaseConnection.</p>
+<p>jedis只有在拿取和归还connection的时候,去ping一下(没有心跳).如果出错就会移除这个链接.如果业务量很大,切换很快,这样会浪费一次ping/pong.</p>
+<p>命令均是同步的,一问一答,所以不需要id.</p>
+<h2 id="持久化"><a href="#持久化" class="headerlink" title="持久化"></a>持久化</h2><p>redis支持rdb(紧凑,适用于备份)和aof(高可用,适用于实时恢复)两种形式,官网文档写着,以后将统一这两种方式,不过是一个<a href="https://redis.io/topics/persistence" target="_blank" rel="noopener">长期的计划</a></p>
+<p>内存或者磁盘满,都可以导致redis不可用.</p>
+<p>rdb是把全部数据生成快照,存放在dir配置里(线上的可以通过config get dir来查看,或者配置文件).可以通过save或者bgsave(fork后save)来触发.fork操作每GB多20ms.可以使用info stats查看lastest_fork_usec上次fork耗时(单位微秒).save m n的配置标识m秒内存在n次修改,则自动触发bgsave.默认save 3600 1 / 300 100 / 60 10000</p>
+<p>aof则采用追加命令的形式来保存修改,可以重演该文件达到重建redis的目的,重演时其实99%的命令是无用的.官方推荐1s flush一次,即everysec.如果磁盘繁忙,会使异步的flush变慢.在主线程上,发现上次flush成功在2s之前,redis会阻塞等待.会影响redis的吞吐量.如果真的有问题,可能会丢失这2s的所有命令.</p>
+<p>aof必然会越来越大,需要定时重写,合并一些命令.auto-aof-rewrite-min-size默认为64m.也可以使用命令bgrewriteaof来触发.</p>
+<p>info persistence可以查看关于持久化的一些状态信息.</p>
+<h2 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h2>
+  </section>
+  <footer class="post-footer">
+    <!--
+    <section class="author">
+      <h4>flydzt</h4>
+      <p></p>
+    </section>
+    -->
+  </footer>
+</article>
+
+<nav class="pagination" role="pagination">
+    
+    <a class="newer-posts" href="/java%E5%B8%B8%E7%94%A8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
+        ← prev <!--java常用数据结构-->
+    </a>
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/%E8%AE%B0%E4%B8%80%E6%AC%A1guava_cache%E7%9A%84%E4%BD%BF%E7%94%A8%E9%97%AE%E9%A2%98/">
+        <!--记一次guava_cache的使用问题--> next →
+    </a>
+    
+</nav>
+
+
+        </main>
+        <footer id="footer">
+            <section id="footer-message">&copy; 2020 flydzt. </section>
+        </footer>
+    </body>
+</html>
+
+
