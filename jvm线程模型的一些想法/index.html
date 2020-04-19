@@ -69,8 +69,14 @@
 <p>所以在编程时,需要明确一个调用是同步的还是异步的,由我们来处理这个逻辑.如果实现为协程的话,调用都可以是阻塞的.阻塞调用会发生线程切换.这个阻塞是虚拟机提供的功能,而不是操作系统.那我们所有操作都可以是同步的,可以做到connection per thread.</p>
 <p>netty的线程模型的实现是混合线程的感觉.一个线程在select轮询,但是它又关注任务队列里是否有任务即将到期需要执行.所以select是有时限的.在执行对应任务的时候,又是不支持抢占式的调度,只能等任务执行完毕.所以在使用netty的时候,一些耗时操作直接提交给netty是有风险的.</p>
 <h2 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h2><p>使用线程池的情况下,估计好任务的瓶颈,cpu和io的时间占比.做好微服务拆分,配合上容器,能充分利用系统资源.</p>
-<p>$N_{thread}=N_{cpu}<em>U_{cpu}</em>(1+\frac{W}{C})$</p>
+<p>
+$N_{thread}=N_{cpu}*U_{cpu}*(1+\frac{W}{C})$
+</p>
 
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=TeX-MML-AM_CHTML"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\(','\)']]}});
+</script>
   </section>
   <footer class="post-footer">
     <!--
@@ -97,7 +103,22 @@
         <footer id="footer">
             <section id="footer-message">&copy; 2020 flydzt. </section>
         </footer>
-    </body>
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
 </html>
 
 
