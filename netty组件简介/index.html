@@ -57,15 +57,17 @@
 
   <h1 class="post-title">netty 组件简介</h1>
   <section class="post-content article-entry">
-    <h2 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h2><p>对应socket</p>
-<h3 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h3><table>
+    <h2 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h2><h2 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h2><p>对应socket</p>
+<h3 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>状态</th>
 <th>说明</th>
 </tr>
 </thead>
-<tbody><tr>
+<tbody>
+<tr>
 <td>channelUnregistered</td>
 <td>已创建未注册</td>
 </tr>
@@ -81,21 +83,23 @@
 <td>channelInactive</td>
 <td>未连接到远程主机</td>
 </tr>
-<tr>
-<td>在状态发生变化时,能通知到pipeline,从而使handler能处理这些事件</td>
-<td></td>
-</tr>
-</tbody></table>
+</tbody>
+</table>
+</div>
+<p>在状态发生变化时,能通知到pipeline,从而使handler能处理这些事件</p>
 <h2 id="ChannelHandler"><a href="#ChannelHandler" class="headerlink" title="ChannelHandler"></a>ChannelHandler</h2><p>处理节点</p>
-<p>ChannelInboundHandler<br>ChannelOutboundHanlder</p>
-<h3 id="生命周期-1"><a href="#生命周期-1" class="headerlink" title="生命周期"></a>生命周期</h3><table>
+<p>ChannelInboundHandler</p>
+<p>ChannelOutboundHanlder</p>
+<h3 id="生命周期-1"><a href="#生命周期-1" class="headerlink" title="生命周期"></a>生命周期</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>状态</th>
 <th>说明</th>
 </tr>
 </thead>
-<tbody><tr>
+<tbody>
+<tr>
 <td>handlerAdded</td>
 <td>添加到pipeline</td>
 </tr>
@@ -107,7 +111,9 @@
 <td>exceptionCaught</td>
 <td>抛出异常</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
+</div>
 <h2 id="ChannelPipeline"><a href="#ChannelPipeline" class="headerlink" title="ChannelPipeline"></a>ChannelPipeline</h2><p>handler串联为pipeline,ChannelHanlderContext是handler和pipeline的绑定</p>
 <h2 id="EventLoop"><a href="#EventLoop" class="headerlink" title="EventLoop"></a>EventLoop</h2><p>Channel会被分配到一个EventLoop中,一个EventLoop对应一个线程.</p>
 <p>EventLoop会不停轮训,找到可读写的Channel,以及需要执行的任务.</p>
