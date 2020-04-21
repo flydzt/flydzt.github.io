@@ -55,14 +55,16 @@
 
   <h1 class="post-title">redis的一些基础知识</h1>
   <section class="post-content article-entry">
-    <h2 id="redis命令一览-未列举特别常用的"><a href="#redis命令一览-未列举特别常用的" class="headerlink" title="redis命令一览,未列举特别常用的"></a>redis命令一览,未列举特别常用的</h2><table>
+    <h2 id="redis命令一览-未列举特别常用的"><a href="#redis命令一览-未列举特别常用的" class="headerlink" title="redis命令一览,未列举特别常用的"></a>redis命令一览,未列举特别常用的</h2><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>命令</th>
 <th>功能</th>
 </tr>
 </thead>
-<tbody><tr>
+<tbody>
+<tr>
 <td>dbsize</td>
 <td>key数量</td>
 </tr>
@@ -82,7 +84,9 @@
 <td>pfadd/pfcount/pfmerge</td>
 <td>0.81%误差的统计</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
+</div>
 <p>set使用nx可以作为分布式锁.使用ex来防止意外不能手动退出的情况.</p>
 <p>hgetall在field数量多的时候,会阻塞redis.使用hscan来遍历.</p>
 <p>rename会先del旧键.如果旧键较大,会阻塞.通过开启lazyfree-lazy-server-del,将del操作异步化.rename也要注意新旧value在一个slot里.</p>
@@ -114,7 +118,25 @@
 <p>aof则采用追加命令的形式来保存修改,可以重演该文件达到重建redis的目的,重演时其实99%的命令是无用的.官方推荐1s flush一次,即everysec.如果磁盘繁忙,会使异步的flush变慢.在主线程上,发现上次flush成功在2s之前,redis会阻塞等待.会影响redis的吞吐量.如果真的有问题,可能会丢失这2s的所有命令.</p>
 <p>aof必然会越来越大,需要定时重写,合并一些命令.auto-aof-rewrite-min-size默认为64m.也可以使用命令bgrewriteaof来触发.</p>
 <p>info persistence可以查看关于持久化的一些状态信息.</p>
-<h2 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h2>
+<p>redis重启后优先加载aof文件,如果不存在aof文件,加载rdb.</p>
+<h2 id="复制"><a href="#复制" class="headerlink" title="复制"></a>复制</h2><p>防止单点问题,可以起新实例作为从节点,使用slaveof {host} {port}命令即可,使用slaveof no one则可以断开.从节点应当是只读的.为了减少延迟,默认TCP_NODELAY.</p>
+<p>可以是一主一从,也可以是一主多从,也可以是树状结构.</p>
+<p>复制过程:</p>
+<ul>
+<li>保存主节点信息</li>
+<li>建立socket信息</li>
+<li>发送ping</li>
+<li>权限验证</li>
+<li>同步数据集</li>
+<li>命令持续复制</li>
+</ul>
+<p>数据同步部分:</p>
+<p>全量复制:<br>从节点发送psync ? -1命令.主节点返回runId,执行bgsave保存rdb文件到本地,同时将之后的命令写入缓冲区.rdb完成后,网络传输到从节点.从节点从开始到结束默认60s(repl-timeout)超时时间.缓冲区默认60s写入大于64mb或者直接超过256m(client-output-buffer-limit slave 256M 64M 60),主节点将会关闭客户端连接.</p>
+<p>部分复制:<br>第一次主从建立连接必须是需要全量复制的,而部分复制发生在: 主从断开连接后,主节点将接下来的命令全部写入缓冲区(默认1m),并记录offset,从节点恢复后,将高速主节点当前的进度(psync {runId} {offset}),主节点只需要将之后的命令同步即可. 如果runId是不合法的,将重新全量同步.</p>
+<p>从节点是不会主动删除过期key的,要等主节点同步del命令才会删除.如果从节点设置的内存比主节点要小,从节点会根据maxmemory-policy进行淘汰,从而主从不一致.</p>
+<p>主节点重启后,从节点重新连接,主节点会认为是一个新的从节点,即runId是无效的.将会全量同步.故主节点挂掉/重启,应当把从节点升级为主节点.</p>
+<p>主从网络断开比较久的话,主节点的缓冲区是不够的,如果偏移量不能满足从节点,也会发生全量复制,可以增大repl_backlog_size来改善这种情况.</p>
+
   </section>
   <footer class="post-footer">
     <!--
