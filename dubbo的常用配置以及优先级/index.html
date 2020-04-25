@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+    <head>
+		
+        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="description" content="解决一类问题而不是一个问题">
+        <link rel="shortcut icon" href="/images/hhh.jpg"/>
+        <link rel="canonical" href="http://guolinn.com/">
+        <link rel="alternate" type="application/rss+xml" title="flydzt" href="">
+        <title>dubbo的配置优先级 | flydzt</title>
+        <meta name="description" content="{{meta_description}}">
+
+        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
+        <meta name="HandheldFriendly" content="True" />
+        <meta name="MobileOptimized" content="320" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+    <meta name="generator" content="Hexo 4.2.0"></head>
+    
+		<body class="post-template">
+	
+
+        <header id="header">
+            <a id="logo" href="/"><img src="/images/hhh.jpg" alt="flydzt" /></a>
+            <h1><a href="/">flydzt</a></h1>
+            <p></p>
+            <div id="follow-icons">
+          <a href="http://github.com/flydzt" target="_blank" rel="noopener"><i class="fa fa-github-square fa-2x"></i></a>
+          </div>
+<h6><a href="/about">About</a></h6>
+        </header>
+
+        <main id="content">
+        
+
+<article class="post">
+  四月 22, 2020
+  
+    <span class="taglist">  &middot; 
+    
+    
+      <a href='/tags/java/'>java</a> 
+    
+      <a href='/tags/dubbo/'>dubbo</a> 
+    
+    </span>
+  
+
+  <h1 class="post-title">dubbo的配置优先级</h1>
+  <section class="post-content article-entry">
+    <h2 id="dubbo的配置优先级"><a href="#dubbo的配置优先级" class="headerlink" title="dubbo的配置优先级"></a>dubbo的配置优先级</h2><p>dubbo的配置可以由jvm启动参数-D来配置,也可以通过xml来配置,也可以通过dubbo.properties配置文件来配置.优先级依次从高到低.</p>
+<p><a href="https://dubbo.apache.org/zh-cn/docs/user/configuration/configuration-load-process.html" target="_blank" rel="noopener">配置加载流程</a></p>
+<h2 id="如何覆盖"><a href="#如何覆盖" class="headerlink" title="如何覆盖"></a>如何覆盖</h2><p>通常我们需要配置application/registry/service/reference等.</p>
+<p>在使用spring的情况下,dubbo是通过实现DubboBeanDefinitionParser implements BeanDefinitionParser来解析xml配置(当然也有实现注解,或者使用api来启动).</p>
+<p>在生成bean之后,真正使用前,会进行refresh,将通过反射的形式覆盖一些配置.</p>
+<p>例如我指定了一个reference,接口为com.example.HelloWorld, id为hello.那么如果我想覆盖它的group,就可以</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-Ddubbo.reference.com.example.HelloWorld.hello.group=new_group</span><br></pre></td></tr></table></figure>
+<p>如果要覆盖service的,因为我们通常不会给service指定一个id,就可以</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-Ddubbo.service.com.example.HelloWorld.group=new_group</span><br></pre></td></tr></table></figure>
+<p>如果要覆盖application的name,就可以</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-Ddubbo.application.name=new_name</span><br></pre></td></tr></table></figure>
+<p>当然并不是所有属性都可以被覆盖的.</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">//首先是有set方法</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">isSetter</span><span class="params">(Method method)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> method.getName().startsWith(<span class="string">"set"</span>)</span><br><span class="line">            &amp;&amp; !<span class="string">"set"</span>.equals(method.getName())</span><br><span class="line">            &amp;&amp; Modifier.isPublic(method.getModifiers())</span><br><span class="line">            &amp;&amp; method.getParameterCount() == <span class="number">1</span></span><br><span class="line">            &amp;&amp; ClassUtils.isPrimitive(method.getParameterTypes()[<span class="number">0</span>]);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//并且是基本类型</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">isPrimitive</span><span class="params">(Class&lt;?&gt; type)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> type.isPrimitive()</span><br><span class="line">            || type == String<span class="class">.<span class="keyword">class</span></span></span><br><span class="line"><span class="class">            || <span class="title">type</span> </span>== Character<span class="class">.<span class="keyword">class</span></span></span><br><span class="line"><span class="class">            || <span class="title">type</span> </span>== Boolean<span class="class">.<span class="keyword">class</span></span></span><br><span class="line"><span class="class">            || <span class="title">type</span> </span>== Byte<span class="class">.<span class="keyword">class</span></span></span><br><span class="line"><span class="class">            || <span class="title">type</span> </span>== Short<span class="class">.<span class="keyword">class</span></span></span><br><span class="line"><span class="class">            || <span class="title">type</span> </span>== Integer<span class="class">.<span class="keyword">class</span></span></span><br><span class="line"><span class="class">            || <span class="title">type</span> </span>== Long<span class="class">.<span class="keyword">class</span></span></span><br><span class="line"><span class="class">            || <span class="title">type</span> </span>== Float<span class="class">.<span class="keyword">class</span></span></span><br><span class="line"><span class="class">            || <span class="title">type</span> </span>== Double<span class="class">.<span class="keyword">class</span></span></span><br><span class="line"><span class="class">            || <span class="title">type</span> </span>== Object<span class="class">.<span class="keyword">class</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Environment"><a href="#Environment" class="headerlink" title="Environment"></a>Environment</h2><p>dubbo使用Environment类来提供接口读取配置.将配置组合成一个CompositeConfiguration固定优先级.</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> CompositeConfiguration <span class="title">getConfiguration</span><span class="params">(String prefix, String id)</span> </span>&#123;</span><br><span class="line">    CompositeConfiguration compositeConfiguration = <span class="keyword">new</span> CompositeConfiguration();</span><br><span class="line">    <span class="comment">// Config center has the highest priority</span></span><br><span class="line">    <span class="comment">//jvm启动参数 -D</span></span><br><span class="line">    compositeConfiguration.addConfiguration(<span class="keyword">this</span>.getSystemConfig(prefix, id));</span><br><span class="line">    <span class="comment">//环境变量</span></span><br><span class="line">    compositeConfiguration.addConfiguration(<span class="keyword">this</span>.getEnvironmentConfig(prefix, id));</span><br><span class="line">    compositeConfiguration.addConfiguration(<span class="keyword">this</span>.getAppExternalConfig(prefix, id));</span><br><span class="line">    compositeConfiguration.addConfiguration(<span class="keyword">this</span>.getExternalConfig(prefix, id));</span><br><span class="line">    <span class="comment">//dubbo.properties</span></span><br><span class="line">    compositeConfiguration.addConfiguration(<span class="keyword">this</span>.getPropertiesConfig(prefix, id));</span><br><span class="line">    <span class="keyword">return</span> compositeConfiguration;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="CompositeConfiguration"><a href="#CompositeConfiguration" class="headerlink" title="CompositeConfiguration"></a>CompositeConfiguration</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">getInternalProperty</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">    Configuration firstMatchingConfiguration = <span class="keyword">null</span>;</span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="keyword">for</span> (Configuration config : configList) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (config.containsKey(key)) &#123;</span><br><span class="line">                <span class="comment">//匹配到就退出返回</span></span><br><span class="line">                firstMatchingConfiguration = config;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            logger.error(<span class="string">"Error when trying to get value for key "</span> + key + <span class="string">" from "</span> + config + <span class="string">", will continue to try the next one."</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (firstMatchingConfiguration != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> firstMatchingConfiguration.getProperty(key);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="refresh"><a href="#refresh" class="headerlink" title="refresh"></a>refresh</h2><p>在config使用前,需要进行refresh,会获取对应的配置通过反射的方式set进去</p>
+<p>需要拿到prefix和id.然后再和属性拼成对应的key,去获取属性值.</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">refresh</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">//拿到组合配置</span></span><br><span class="line">        <span class="comment">//preifx 是用class的名字格式化的,如果是bean和config结尾的,会去掉对应的值,例如serviceConfig -&gt; service 例如com.example.Demo-&gt;com.example.Demo(这个就没有变化)</span></span><br><span class="line">        <span class="comment">//id : 就是xml里配置的id 如果不指定id 就是null 通常我们不会对service指定id</span></span><br><span class="line">        CompositeConfiguration compositeConfiguration = Environment.getInstance().getConfiguration(getPrefix(), getId());</span><br><span class="line">        Configuration config = <span class="keyword">new</span> ConfigConfigurationAdapter(<span class="keyword">this</span>);</span><br><span class="line">        <span class="keyword">if</span> (Environment.getInstance().isConfigCenterFirst()) &#123;</span><br><span class="line">            <span class="comment">// The sequence would be: SystemConfiguration -&gt; AppExternalConfiguration -&gt; ExternalConfiguration -&gt; AbstractConfig -&gt; PropertiesConfiguration</span></span><br><span class="line">            compositeConfiguration.addConfiguration(<span class="number">4</span>, config);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// The sequence would be: SystemConfiguration -&gt; AbstractConfig -&gt; AppExternalConfiguration -&gt; ExternalConfiguration -&gt; PropertiesConfiguration</span></span><br><span class="line">            compositeConfiguration.addConfiguration(<span class="number">2</span>, config);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//找到所有的set方法</span></span><br><span class="line">        Method[] methods = getClass().getMethods();</span><br><span class="line">        <span class="keyword">for</span> (Method method : methods) &#123;</span><br><span class="line">            <span class="keyword">if</span> (MethodUtils.isSetter(method)) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">//获取对应的配置 就可以通过prefix+id+属性的方式来获取</span></span><br><span class="line">                    String value = StringUtils.trim(compositeConfiguration.getString(extractPropertyName(getClass(), method)));</span><br><span class="line">                    <span class="comment">//然后覆盖这个属性</span></span><br><span class="line">                    <span class="keyword">if</span> (StringUtils.isNotEmpty(value) &amp;&amp; ClassUtils.isTypeMatch(method.getParameterTypes()[<span class="number">0</span>], value)) &#123;</span><br><span class="line">                        method.invoke(<span class="keyword">this</span>, ClassUtils.convertPrimitive(method.getParameterTypes()[<span class="number">0</span>], value));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (NoSuchMethodException e) &#123;</span><br><span class="line">                    logger.info(<span class="string">"Failed to override the property "</span> + method.getName() + <span class="string">" in "</span> +</span><br><span class="line">                            <span class="keyword">this</span>.getClass().getSimpleName() +</span><br><span class="line">                            <span class="string">", please make sure every property has getter/setter method provided."</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        logger.error(<span class="string">"Failed to override "</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+  </section>
+  <footer class="post-footer">
+    <!--
+    <section class="author">
+      <h4>flydzt</h4>
+      <p></p>
+    </section>
+    -->
+  </footer>
+</article>
+
+<nav class="pagination" role="pagination">
+    
+    <span class="page-number">•</span>
+    
+    <a class="older-posts" href="/jvm%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/">
+        <!--jvm线程模型的一些基础知识--> next →
+    </a>
+    
+</nav>
+
+
+        </main>
+        <footer id="footer">
+            <section id="footer-message">&copy; 2020 flydzt. </section>
+        </footer>
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
+
+
