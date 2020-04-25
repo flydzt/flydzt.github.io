@@ -65,7 +65,7 @@
 <p>网络传输繁忙也意味着大量的中断,为提高效率可以合并发送.</p>
 <p>通常,业务的数据进入系统调用后(write调用成功只是进入缓冲区,write阻塞说明缓冲区已满.为重试需要,只有收到对方ack才会清理缓冲区内容)就认为发送成功了,但这部分数据可能还未真正发送,并且可能丢包(重试由系统保证). 由此可能会产生很多无意义的数据发送(服务端认为未超时,但是由于发送不及时或丢包重试,客户端认为超时了).</p>
 <p>KEEP_ALIVE则是定时去探测某个连接是否可用.dubbo的客户端是开启TCP_KEEP_ALIVE的.服务端则开启了复用address.</p>
-<p>主动的心跳探测(默认60s)并关闭连接是更可控的.</p>
+<p>主动的心跳探测(默认60s)来关闭连接是更可控的,而不是使用KEEP_ALIVE.</p>
 <h3 id="多路复用"><a href="#多路复用" class="headerlink" title="多路复用"></a>多路复用</h3><p>Server可以采取多路复用等机制来提高面对多Client时的效率. 处理多client经历了几个阶段,为每个连接分配进程,为每个连接分配线程,使用select,使用poll,使用epoll(linux场景)…</p>
 <p>当然,多路复用只是一个手段.重要是在和业务结合,明白io线程在做什么. 例如如果大量处在wait阶段,说明并没有数据的收发.</p>
 <p>多路复用的目的是降低找到需要处理的连接的开销.他不是一个通信框架的全部.</p>
@@ -79,9 +79,9 @@
 </ol>
 <h3 id="通信组件"><a href="#通信组件" class="headerlink" title="通信组件"></a>通信组件</h3><p>在dubbo里, 可以使用几个通信框架来实现连接交换数据, 默认的方案是netty.</p>
 <h3 id="io线程"><a href="#io线程" class="headerlink" title="io线程"></a>io线程</h3><p>boss只有1个线程,worker线程池则可以通过protocol.iothreads参数来设置,默认为cpu数量+1.当然为了防止浪费线程, 最大数量为32.</p>
-<p>如果一台机器部署了多个dubbo应用,则iothreads是需要被考虑到的,(当然其他参数也是需要考虑的).</p>
+<p>如果一台机器部署了多个dubbo应用,则iothreads是需要考虑的.</p>
 <p>如果是使用容器(容器一般就是一个应用),则该值就是容器被分配的cpu数量+1.</p>
-<h3 id="处理逻辑"><a href="#处理逻辑" class="headerlink" title="处理逻辑"></a>处理逻辑</h3><p>dubbo使用netty非常简单,每一个netty的handler都会转给dubbo自己的handler.</p>
+<h3 id="处理逻辑"><a href="#处理逻辑" class="headerlink" title="处理逻辑"></a>处理逻辑</h3><p>dubbo使用netty比较简单,每一个netty的handler都会转给dubbo自己的handler.</p>
 <p>netty的pipeline:</p>
 <ol>
 <li><p>inbound:</p>
@@ -95,13 +95,15 @@
 <p>server-idle-handler使用了netty的IdleSateHandler来实现心跳监听.如果超过读/写的idle时间,将会发送一个IdleStatEvent.</p>
 <p>handler的类是NettyServerHandler以及NettyClientHandler,可以处理IdleStatEvent,关闭channel.该类被包装了两层,分别是HeartbeatHandler和AllChannelHandler.</p>
 <p>HeartbeatHandler实现了识别心跳数据的功能.防止进入到业务里去,结合IdleSateHandler会刷新最新的数据读写时间.如果一直没有收到心跳/业务数据,channel将被关闭.</p>
+<p>用户发起请求,进入netty的处理逻辑并阻塞(也支持非阻塞),dubbo为每个请求生成一个全局id,发送请求后,保存在一个map(DefaultFuture)中,接受到返回后,将对应的id取出并返回给用户线程.</p>
 <h3 id="通信协议"><a href="#通信协议" class="headerlink" title="通信协议"></a>通信协议</h3><p><a href="http://dubbo.apache.org/zh-cn/blog/dubbo-protocol.html" target="_blank" rel="noopener">dubbo协议</a></p>
 <p>官方介绍了dubbo协议的设计,以及优缺点.</p>
 <h2 id="数据编解码"><a href="#数据编解码" class="headerlink" title="数据编解码"></a>数据编解码</h2><p>在程序里,数据总是以数据结构的形式存在,要进行网络传输,只能转换为二进制.</p>
 <p>所以编解码成为一个很重要的部分.我们期望的编码是使用方便,版本兼容,编解码效率高,压缩比率高……</p>
 <p>dubbo默认的序列化为hessian2.常用的还有json,protobuff,kryo等.</p>
-<p>json是阅读友好的.在内网带宽充裕的情况下,使用json能获得良好的开发体验(</p>
-<p>如果是并发高,压力大的应用,使用pb或者kryo是不错的选择.pb按照位置来保存字段,可以兼容前后版本,前提是顺序不变.kryo则不是兼容的.</p>
+<p>dubbo新版本支持grpc,性能提升30%. <a href="http://dubbo.apache.org/zh-cn/blog/2.7.5-release.html" target="_blank" rel="noopener">dubbo 2.7.5</a></p>
+<p>json是阅读友好的.在内网带宽充裕调用量不多的情况下,使用json能获得良好的开发体验(</p>
+<p>如果是并发高,压力大的应用,使用pb或者kryo是不错的选择.pb按照位置来保存字段,可以兼容前后版本,前提是顺序不变.kryo则不是兼容的,每次更改字段都需要升级dubbo的版本来升级客户端和服务端.</p>
 
   </section>
   <footer class="post-footer">
