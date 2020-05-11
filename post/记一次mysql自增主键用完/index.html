@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> flydzt | 记一次mysql自增主键用完 </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.70.0" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="解决一类问题而不是一个问题">
+    <link rel="stylesheet" href="https://flydzt.github.io/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="https://flydzt.github.io">
+    
+    <link rel="shortcut icon" href="https://flydzt.github.io/images/hhh.jpgfavicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://flydzt.github.io/images/hhh.jpgapple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://flydzt.github.io/images/hhh.jpgfavicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://flydzt.github.io/images/hhh.jpgfavicon-16x16.png">
+
+    <link rel="canonical" href="https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1mysql%E8%87%AA%E5%A2%9E%E4%B8%BB%E9%94%AE%E7%94%A8%E5%AE%8C/">
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="https://flydzt.github.io/images/hhh.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">FLYDZT</a></h3>
+        <div class="description">
+          <p>解决一类问题而不是一个问题</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://github.com/flydzt" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; flydzt 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/" title="">Home</a></li>
+
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>记一次mysql自增主键用完
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Sat, Apr 11, 2020</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">1-minute read</span>
+        </div>
+        
+        </div>
+
+    <h2 id="场景">场景</h2>
+<p>海外业务接入了多家网盟,网盟会定期push广告过来,供我们去播放.</p>
+<h2 id="现象">现象</h2>
+<p>日志报错,大量的主键重复错误.且id为int的最大值.</p>
+<h2 id="分析">分析</h2>
+<p>业务设计时,没有考虑网盟会推送巨量的广告过来,当初刚上线,每次推送只有两位数的广告,主键只用了int.</p>
+<p>一开始考虑了实时表和历史表的设计,但了解业务后只采用时间戳来管理版本,没做归档操作.</p>
+<p>一段时间后,接入网盟变多,且有的网盟频繁推送上千上万的广告过来.导致主键用完,报错.</p>
+<h2 id="处理">处理</h2>
+<p>已经影响线上业务, 快速导出最近一天的广告后, 直接将表truncate,使自增计数重置,并重新导入广告.并等待网盟新一轮push.</p>
+<h2 id="反思">反思</h2>
+<p>首先要做到频控, 距离上次提交不到30分钟直接拒绝.返回对应错误码.</p>
+<p>做到每次网盟push广告过来后,会顺便清理七天前的数据.主键不再使用自增id,而采用网盟id+版本号+广告id.增加insert_time索引.</p>
+<p>在表设计时,业务场景想的过于简单,以为能用很久的功能,不到几个月就被玩坏了.以后设计的时候,需要考虑量级成倍增长带来的问题.如果量级很大,可以采用long来保存.但表里数据会很多,可能影响性能,浪费存储.</p>
+
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+        
+    <span class="separator"><a class="tag" href="/tags/mysql/">mysql</a></span>
+
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-appear.min.js"></script></html></body>
+
+</html>

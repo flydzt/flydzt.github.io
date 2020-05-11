@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on FLYDZT</title>
+    <link>https://flydzt.github.io/post/</link>
+    <description>Recent content in Posts on FLYDZT</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 11 May 2020 01:06:59 +0000</lastBuildDate>
+    
+	<atom:link href="https://flydzt.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Orange读书笔记-引导程序</title>
+      <link>https://flydzt.github.io/post/orange%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E6%9C%80%E5%B0%8F%E7%9A%84%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</link>
+      <pubDate>Mon, 11 May 2020 01:06:59 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/orange%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0-%E6%9C%80%E5%B0%8F%E7%9A%84%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</guid>
+      <description>最小的操作系统 这里并没有实现一个操作系统,只是实现了一个引导扇区.
+我们知道,当计算机电源被打开时,它会先进行加电自检（POST）,然后寻找启动盘,如果是选择从软盘启动,计算机就会检查软盘的0面0磁道1扇区,如果发现它以0xAA55(9)结束,则BIOS认为它是一个引导扇区,当然,一个正确的引导扇区除了以0xAA55结束之外,还应该包含一段少于512字节的执行码,一旦BIOS发现了引导扇区,就会将这512字节的内容装载到内存地址0000:7c00处,然后跳转到0000:7c00处将控制权彻底交给这段引导代码.
+环境 archlinux</description>
+    </item>
+    
+    <item>
+      <title>同步的一些思考与java实现</title>
+      <link>https://flydzt.github.io/post/%E5%90%8C%E6%AD%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83%E4%B8%8Ejava%E5%AE%9E%E7%8E%B0/</link>
+      <pubDate>Mon, 27 Apr 2020 22:54:52 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E5%90%8C%E6%AD%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83%E4%B8%8Ejava%E5%AE%9E%E7%8E%B0/</guid>
+      <description>竞争和同步 多个线程读写某些数据,结果依赖于精确时序,就是竞争.或者说,资源是共享的,状态是重要的,多个线程同时读写,会产生不可预期的结果.
+而同步则是为了让结果唯一(可预测).
+为了同步,需要临界区.首先,不允许两个线程同时处在临界区,其次,不能让一个线程无限期等待进入临界区.
+在临界区之外,一个线程不能阻塞其他线程.</description>
+    </item>
+    
+    <item>
+      <title>记一次redis全局锁的问题</title>
+      <link>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1redis%E5%85%A8%E5%B1%80%E9%94%81%E7%9A%84%E9%97%AE%E9%A2%98/</link>
+      <pubDate>Sat, 25 Apr 2020 14:06:09 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1redis%E5%85%A8%E5%B1%80%E9%94%81%E7%9A%84%E9%97%AE%E9%A2%98/</guid>
+      <description>背景 在一个刷新数据的任务里,防止多个节点同时开始任务浪费资源,使用redis作为全局锁.
+多个节点使用set nx lock来获取锁,没有获取到将退出,等待下一次调度.任务结束后将锁del.</description>
+    </item>
+    
+    <item>
+      <title>dubbo的配置优先级</title>
+      <link>https://flydzt.github.io/post/dubbo%E7%9A%84%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8A%E4%BC%98%E5%85%88%E7%BA%A7/</link>
+      <pubDate>Wed, 22 Apr 2020 20:30:24 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/dubbo%E7%9A%84%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8A%E4%BC%98%E5%85%88%E7%BA%A7/</guid>
+      <description>dubbo的配置优先级 dubbo的配置可以由jvm启动参数-D来配置,也可以通过xml来配置,也可以通过dubbo.properties配置文件来配置.优先级依次从高到低.
+配置加载流程
+如何覆盖 通常我们需要配置application/registry/service/reference等.</description>
+    </item>
+    
+    <item>
+      <title>jvm线程模型的一些基础知识</title>
+      <link>https://flydzt.github.io/post/jvm%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Sun, 19 Apr 2020 03:32:28 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/jvm%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</guid>
+      <description>进程和线程 进程是资源的集合,线程是执行的实体.
+进程由fork系统调用创建,形成层次结构,通常新建进程马上会执行新的命令,所以有copy-on-write的优化.
+线程则由pthread_create创建,共享进程内的资源.程序计数器和栈是独立的.程序计数器表明当前执行到哪里,栈则是执行的历史.
+用户线程和内核线程 操作系统的线程概念可以实现在用户空间或者内核空间,也可以是混合的.</description>
+    </item>
+    
+    <item>
+      <title>aqs基本原理(代码注释)</title>
+      <link>https://flydzt.github.io/post/aqs%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/</link>
+      <pubDate>Sat, 11 Apr 2020 12:38:07 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/aqs%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/</guid>
+      <description>基本思路 通过cas去获取主动权,失败就去排队.持有锁的解锁后唤醒下一个, 被唤醒后的线程看看自己是不是排到了第一.
+值得注意的是,排队时候是可以取消的.从队列中删除某个节点,不能出现死循环,指向错误的问题.
+由于支持节点的取消:</description>
+    </item>
+    
+    <item>
+      <title>记一次mysql自增主键用完</title>
+      <link>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1mysql%E8%87%AA%E5%A2%9E%E4%B8%BB%E9%94%AE%E7%94%A8%E5%AE%8C/</link>
+      <pubDate>Sat, 11 Apr 2020 11:49:20 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1mysql%E8%87%AA%E5%A2%9E%E4%B8%BB%E9%94%AE%E7%94%A8%E5%AE%8C/</guid>
+      <description>场景 海外业务接入了多家网盟,网盟会定期push广告过来,供我们去播放.
+现象 日志报错,大量的主键重复错误.且id为int的最大值.
+分析 业务设计时,没有考虑网盟会推送巨量的广告过来,当初刚上线,每次推送只有两位数的广告,主键只用了int.</description>
+    </item>
+    
+    <item>
+      <title>juc的一些基础知识</title>
+      <link>https://flydzt.github.io/post/juc%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Sat, 04 Apr 2020 14:59:08 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/juc%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</guid>
+      <description>java.util.concurrent java 1.5提供了juc包,实现了常用的工具类.包括线程池,异步IO,轻量级任务框架等.
+volatile volatile关键字保证各线程间对于同一个变量,总是能看到最新值.是一种稍弱的同步机制.对于volatile变量,编译器和运行时不会进行重排序,并且不会被缓存在寄存器或者对其他处理器不可见的地方.</description>
+    </item>
+    
+    <item>
+      <title>记一次线程池使用的bad_case</title>
+      <link>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%BD%BF%E7%94%A8%E7%9A%84bad-case/</link>
+      <pubDate>Thu, 02 Apr 2020 22:26:48 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%BD%BF%E7%94%A8%E7%9A%84bad-case/</guid>
+      <description>需求 一个数据上报服务,本地会进行一些预处理.为了减轻下游服务的压力,使用了core:1 max:1的线程池来对请求进行排队.由于数据量慢慢增长,单线程上报跟不上速度.发现产生reject(reject会落本地文件).
+改造 下游服务改造后,可以增大并发程度.于是改为core:1 max:8并免测上线.</description>
+    </item>
+    
+    <item>
+      <title>java常用数据结构</title>
+      <link>https://flydzt.github.io/post/java%E5%B8%B8%E7%94%A8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</link>
+      <pubDate>Wed, 01 Apr 2020 21:03:16 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/java%E5%B8%B8%E7%94%A8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</guid>
+      <description>特点 初始化容量 不传入容量的初始化,一般只设置一个容量/负载因子(或者什么都不做),不会去分配空间.例如:
+public ArrayList() { //空列表 复用对象,只有容量发生变化的时候才分配.</description>
+    </item>
+    
+    <item>
+      <title>redis的一些基础知识</title>
+      <link>https://flydzt.github.io/post/redis%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Sun, 29 Mar 2020 14:42:18 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/redis%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</guid>
+      <description>redis命令一览,未列举特别常用的    命令 功能     dbsize key数量   type key种类   object encoding 编码(实现)   hscan/zscan/sscan 结构中的scan   pfadd/pfcount/pfmerge 0.</description>
+    </item>
+    
+    <item>
+      <title>记一次guava_cache的使用问题</title>
+      <link>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1guava_cache%E7%9A%84%E4%BD%BF%E7%94%A8%E9%97%AE%E9%A2%98/</link>
+      <pubDate>Sun, 29 Mar 2020 01:32:47 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1guava_cache%E7%9A%84%E4%BD%BF%E7%94%A8%E9%97%AE%E9%A2%98/</guid>
+      <description>背景 给其他业务提供了一个jar包.
+内部有一些比较重的逻辑,并且依赖实时数据.
+我们提供了http接口可以获取数据.为了减少耗时,使用guava_cache来做为缓存.
+key是多维度拼接的一个值,value为4对kv的map.</description>
+    </item>
+    
+    <item>
+      <title>tcp_ip的一些基础知识</title>
+      <link>https://flydzt.github.io/post/tcp_ip%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Fri, 27 Mar 2020 23:37:40 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/tcp_ip%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</guid>
+      <description>链路层 匹配MAC地址(可以广播)
+网络层 IP    版本 首部长度 服务类型 总长度 标识 标志 片偏移 生存时间 协议 校验和 源IP 目的地IP 选项     4 4 8 16 16 3 13 8 8 16 32 32     传输层 UDP    源端口号 目标端口号 长度 校验和     16 16 16 16    TCP 面向连接,可靠的,基于字节流的通信协议</description>
+    </item>
+    
+    <item>
+      <title>发号器的一些想法</title>
+      <link>https://flydzt.github.io/post/%E5%8F%91%E5%8F%B7%E5%99%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E6%83%B3%E6%B3%95/</link>
+      <pubDate>Fri, 27 Mar 2020 13:02:49 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E5%8F%91%E5%8F%B7%E5%99%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E6%83%B3%E6%B3%95/</guid>
+      <description>特性  全局唯一 高qps 易扩缩容 可内嵌  分布式 分布式并不意味需要节点之间的交互.</description>
+    </item>
+    
+    <item>
+      <title>netty 组件简介</title>
+      <link>https://flydzt.github.io/post/netty%E7%BB%84%E4%BB%B6%E7%AE%80%E4%BB%8B/</link>
+      <pubDate>Sat, 21 Mar 2020 10:12:24 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/netty%E7%BB%84%E4%BB%B6%E7%AE%80%E4%BB%8B/</guid>
+      <description>TODO Channel 对应socket
+生命周期    状态 说明     channelUnregistered 已创建未注册   channelRegistered 注册到EventLoop   channelActive 连接到远程主机 准备收发数据   channelInactive 未连接到远程主机    在状态发生变化时,能通知到pipeline,从而使handler能处理这些事件</description>
+    </item>
+    
+    <item>
+      <title>dubbo的远程通信</title>
+      <link>https://flydzt.github.io/post/dubbo%E7%9A%84%E8%BF%9C%E7%A8%8B%E9%80%9A%E4%BF%A1/</link>
+      <pubDate>Sun, 29 Dec 2019 16:12:04 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/dubbo%E7%9A%84%E8%BF%9C%E7%A8%8B%E9%80%9A%E4%BF%A1/</guid>
+      <description>概览 应用程序的远程通信,无非是Server开一个端口去监听(listen, 例如用一个队列最多阻塞1024个客户端等待accept, 超过的直接拒绝).
+Client进行连接(connect)并拿到一个句柄,Server也拿到(accept, 从监听队列拿出)一个句柄.</description>
+    </item>
+    
+    <item>
+      <title>记一次dubbo压测</title>
+      <link>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1dubbo%E5%8E%8B%E6%B5%8B/</link>
+      <pubDate>Wed, 25 Dec 2019 21:53:13 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1dubbo%E5%8E%8B%E6%B5%8B/</guid>
+      <description>需求 上线了一个熔断降级功能，想做一个压测看下qps.
+熔断降级非常简单,耗时偏高时返回缓存而不是实时计算.在大压力情况下,只会返回缓存
+执行 一台服务器部署服务,另一台服务器部署客户端进行压测.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> flydzt | dubbo的配置优先级 </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.70.0" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="解决一类问题而不是一个问题">
+    <link rel="stylesheet" href="https://flydzt.github.io/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="https://flydzt.github.io">
+    
+    <link rel="shortcut icon" href="https://flydzt.github.io/images/hhh.jpgfavicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://flydzt.github.io/images/hhh.jpgapple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://flydzt.github.io/images/hhh.jpgfavicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://flydzt.github.io/images/hhh.jpgfavicon-16x16.png">
+
+    <link rel="canonical" href="https://flydzt.github.io/post/dubbo%E7%9A%84%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8A%E4%BC%98%E5%85%88%E7%BA%A7/">
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="https://flydzt.github.io/images/hhh.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">FLYDZT</a></h3>
+        <div class="description">
+          <p>解决一类问题而不是一个问题</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://github.com/flydzt" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; flydzt 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/" title="">Home</a></li>
+
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>dubbo的配置优先级
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Wed, Apr 22, 2020</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">2-minute read</span>
+        </div>
+        
+        </div>
+
+    <h2 id="dubbo的配置优先级">dubbo的配置优先级</h2>
+<p>dubbo的配置可以由jvm启动参数-D来配置,也可以通过xml来配置,也可以通过dubbo.properties配置文件来配置.优先级依次从高到低.</p>
+<p><a href="https://dubbo.apache.org/zh-cn/docs/user/configuration/configuration-load-process.html">配置加载流程</a></p>
+<h2 id="如何覆盖">如何覆盖</h2>
+<p>通常我们需要配置application/registry/service/reference等.</p>
+<p>在使用spring的情况下,dubbo是通过实现DubboBeanDefinitionParser implements BeanDefinitionParser来解析xml配置(当然也有实现注解,或者使用api来启动).</p>
+<p>在生成bean之后,真正使用前,会进行refresh,将通过反射的形式覆盖一些配置.</p>
+<p>例如我指定了一个reference,接口为com.example.HelloWorld, id为hello.那么如果我想覆盖它的group,就可以</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">-Ddubbo.reference.com.example.HelloWorld.hello.group<span style="color:#f92672">=</span>new_group
+</code></pre></div><p>如果要覆盖service的,因为我们通常不会给service指定一个id,就可以</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">-Ddubbo.service.com.example.HelloWorld.group<span style="color:#f92672">=</span>new_group
+</code></pre></div><p>如果要覆盖application的name,就可以</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">-Ddubbo.application.name<span style="color:#f92672">=</span>new_name
+</code></pre></div><p>当然并不是所有属性都可以被覆盖的.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#75715e">//首先是有set方法
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isSetter</span><span style="color:#f92672">(</span>Method method<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> method<span style="color:#f92672">.</span><span style="color:#a6e22e">getName</span><span style="color:#f92672">().</span><span style="color:#a6e22e">startsWith</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;set&#34;</span><span style="color:#f92672">)</span>
+                <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#e6db74">&#34;set&#34;</span><span style="color:#f92672">.</span><span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span>method<span style="color:#f92672">.</span><span style="color:#a6e22e">getName</span><span style="color:#f92672">())</span>
+                <span style="color:#f92672">&amp;&amp;</span> Modifier<span style="color:#f92672">.</span><span style="color:#a6e22e">isPublic</span><span style="color:#f92672">(</span>method<span style="color:#f92672">.</span><span style="color:#a6e22e">getModifiers</span><span style="color:#f92672">())</span>
+                <span style="color:#f92672">&amp;&amp;</span> method<span style="color:#f92672">.</span><span style="color:#a6e22e">getParameterCount</span><span style="color:#f92672">()</span> <span style="color:#f92672">==</span> 1
+                <span style="color:#f92672">&amp;&amp;</span> ClassUtils<span style="color:#f92672">.</span><span style="color:#a6e22e">isPrimitive</span><span style="color:#f92672">(</span>method<span style="color:#f92672">.</span><span style="color:#a6e22e">getParameterTypes</span><span style="color:#f92672">()[</span>0<span style="color:#f92672">]);</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#75715e">//并且是基本类型
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isPrimitive</span><span style="color:#f92672">(</span>Class<span style="color:#f92672">&lt;?&gt;</span> type<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> type<span style="color:#f92672">.</span><span style="color:#a6e22e">isPrimitive</span><span style="color:#f92672">()</span>
+                <span style="color:#f92672">||</span> type <span style="color:#f92672">==</span> String<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span>
+                <span style="color:#f92672">||</span> type <span style="color:#f92672">==</span> Character<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span>
+                <span style="color:#f92672">||</span> type <span style="color:#f92672">==</span> Boolean<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span>
+                <span style="color:#f92672">||</span> type <span style="color:#f92672">==</span> Byte<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span>
+                <span style="color:#f92672">||</span> type <span style="color:#f92672">==</span> Short<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span>
+                <span style="color:#f92672">||</span> type <span style="color:#f92672">==</span> Integer<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span>
+                <span style="color:#f92672">||</span> type <span style="color:#f92672">==</span> Long<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span>
+                <span style="color:#f92672">||</span> type <span style="color:#f92672">==</span> Float<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span>
+                <span style="color:#f92672">||</span> type <span style="color:#f92672">==</span> Double<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span>
+                <span style="color:#f92672">||</span> type <span style="color:#f92672">==</span> Object<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div><h2 id="environment">Environment</h2>
+<p>dubbo使用Environment类来提供接口读取配置.将配置组合成一个CompositeConfiguration固定优先级.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">public</span> CompositeConfiguration <span style="color:#a6e22e">getConfiguration</span><span style="color:#f92672">(</span>String prefix<span style="color:#f92672">,</span> String id<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        CompositeConfiguration compositeConfiguration <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> CompositeConfiguration<span style="color:#f92672">();</span>
+        <span style="color:#75715e">// Config center has the highest priority
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//jvm启动参数 -D
+</span><span style="color:#75715e"></span>        compositeConfiguration<span style="color:#f92672">.</span><span style="color:#a6e22e">addConfiguration</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getSystemConfig</span><span style="color:#f92672">(</span>prefix<span style="color:#f92672">,</span> id<span style="color:#f92672">));</span>
+        <span style="color:#75715e">//环境变量
+</span><span style="color:#75715e"></span>        compositeConfiguration<span style="color:#f92672">.</span><span style="color:#a6e22e">addConfiguration</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getEnvironmentConfig</span><span style="color:#f92672">(</span>prefix<span style="color:#f92672">,</span> id<span style="color:#f92672">));</span>
+        compositeConfiguration<span style="color:#f92672">.</span><span style="color:#a6e22e">addConfiguration</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getAppExternalConfig</span><span style="color:#f92672">(</span>prefix<span style="color:#f92672">,</span> id<span style="color:#f92672">));</span>
+        compositeConfiguration<span style="color:#f92672">.</span><span style="color:#a6e22e">addConfiguration</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getExternalConfig</span><span style="color:#f92672">(</span>prefix<span style="color:#f92672">,</span> id<span style="color:#f92672">));</span>
+        <span style="color:#75715e">//dubbo.properties
+</span><span style="color:#75715e"></span>        compositeConfiguration<span style="color:#f92672">.</span><span style="color:#a6e22e">addConfiguration</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getPropertiesConfig</span><span style="color:#f92672">(</span>prefix<span style="color:#f92672">,</span> id<span style="color:#f92672">));</span>
+        <span style="color:#66d9ef">return</span> compositeConfiguration<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+</code></pre></div><h2 id="compositeconfiguration">CompositeConfiguration</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#a6e22e">@Override</span>
+    <span style="color:#66d9ef">public</span> Object <span style="color:#a6e22e">getInternalProperty</span><span style="color:#f92672">(</span>String key<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        Configuration firstMatchingConfiguration <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+        <span style="color:#75715e">//
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>Configuration config <span style="color:#f92672">:</span> configList<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>config<span style="color:#f92672">.</span><span style="color:#a6e22e">containsKey</span><span style="color:#f92672">(</span>key<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                    <span style="color:#75715e">//匹配到就退出返回
+</span><span style="color:#75715e"></span>                    firstMatchingConfiguration <span style="color:#f92672">=</span> config<span style="color:#f92672">;</span>
+                    <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+                <span style="color:#f92672">}</span>
+            <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>Exception e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                logger<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Error when trying to get value for key &#34;</span> <span style="color:#f92672">+</span> key <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; from &#34;</span> <span style="color:#f92672">+</span> config <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;, will continue to try the next one.&#34;</span><span style="color:#f92672">);</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>firstMatchingConfiguration <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">return</span> firstMatchingConfiguration<span style="color:#f92672">.</span><span style="color:#a6e22e">getProperty</span><span style="color:#f92672">(</span>key<span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+
+</code></pre></div><h2 id="refresh">refresh</h2>
+<p>在config使用前,需要进行refresh,会获取对应的配置通过反射的方式set进去</p>
+<p>需要拿到prefix和id.然后再和属性拼成对应的key,去获取属性值.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">refresh</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//拿到组合配置
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//preifx 是用class的名字格式化的,如果是bean和config结尾的,会去掉对应的值,例如serviceConfig -&gt; service 例如com.example.Demo-&gt;com.example.Demo(这个就没有变化)
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//id : 就是xml里配置的id 如果不指定id 就是null 通常我们不会对service指定id
+</span><span style="color:#75715e"></span>            CompositeConfiguration compositeConfiguration <span style="color:#f92672">=</span> Environment<span style="color:#f92672">.</span><span style="color:#a6e22e">getInstance</span><span style="color:#f92672">().</span><span style="color:#a6e22e">getConfiguration</span><span style="color:#f92672">(</span>getPrefix<span style="color:#f92672">(),</span> getId<span style="color:#f92672">());</span>
+            Configuration config <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ConfigConfigurationAdapter<span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">);</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>Environment<span style="color:#f92672">.</span><span style="color:#a6e22e">getInstance</span><span style="color:#f92672">().</span><span style="color:#a6e22e">isConfigCenterFirst</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+                <span style="color:#75715e">// The sequence would be: SystemConfiguration -&gt; AppExternalConfiguration -&gt; ExternalConfiguration -&gt; AbstractConfig -&gt; PropertiesConfiguration
+</span><span style="color:#75715e"></span>                compositeConfiguration<span style="color:#f92672">.</span><span style="color:#a6e22e">addConfiguration</span><span style="color:#f92672">(</span>4<span style="color:#f92672">,</span> config<span style="color:#f92672">);</span>
+            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+                <span style="color:#75715e">// The sequence would be: SystemConfiguration -&gt; AbstractConfig -&gt; AppExternalConfiguration -&gt; ExternalConfiguration -&gt; PropertiesConfiguration
+</span><span style="color:#75715e"></span>                compositeConfiguration<span style="color:#f92672">.</span><span style="color:#a6e22e">addConfiguration</span><span style="color:#f92672">(</span>2<span style="color:#f92672">,</span> config<span style="color:#f92672">);</span>
+            <span style="color:#f92672">}</span>
+
+            <span style="color:#75715e">//找到所有的set方法
+</span><span style="color:#75715e"></span>            Method<span style="color:#f92672">[]</span> methods <span style="color:#f92672">=</span> getClass<span style="color:#f92672">().</span><span style="color:#a6e22e">getMethods</span><span style="color:#f92672">();</span>
+            <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>Method method <span style="color:#f92672">:</span> methods<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>MethodUtils<span style="color:#f92672">.</span><span style="color:#a6e22e">isSetter</span><span style="color:#f92672">(</span>method<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+                        <span style="color:#75715e">//获取对应的配置 就可以通过prefix+id+属性的方式来获取
+</span><span style="color:#75715e"></span>                        String value <span style="color:#f92672">=</span> StringUtils<span style="color:#f92672">.</span><span style="color:#a6e22e">trim</span><span style="color:#f92672">(</span>compositeConfiguration<span style="color:#f92672">.</span><span style="color:#a6e22e">getString</span><span style="color:#f92672">(</span>extractPropertyName<span style="color:#f92672">(</span>getClass<span style="color:#f92672">(),</span> method<span style="color:#f92672">)));</span>
+                        <span style="color:#75715e">//然后覆盖这个属性
+</span><span style="color:#75715e"></span>                        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>StringUtils<span style="color:#f92672">.</span><span style="color:#a6e22e">isNotEmpty</span><span style="color:#f92672">(</span>value<span style="color:#f92672">)</span> <span style="color:#f92672">&amp;&amp;</span> ClassUtils<span style="color:#f92672">.</span><span style="color:#a6e22e">isTypeMatch</span><span style="color:#f92672">(</span>method<span style="color:#f92672">.</span><span style="color:#a6e22e">getParameterTypes</span><span style="color:#f92672">()[</span>0<span style="color:#f92672">],</span> value<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                            method<span style="color:#f92672">.</span><span style="color:#a6e22e">invoke</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">,</span> ClassUtils<span style="color:#f92672">.</span><span style="color:#a6e22e">convertPrimitive</span><span style="color:#f92672">(</span>method<span style="color:#f92672">.</span><span style="color:#a6e22e">getParameterTypes</span><span style="color:#f92672">()[</span>0<span style="color:#f92672">],</span> value<span style="color:#f92672">));</span>
+                        <span style="color:#f92672">}</span>
+                    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>NoSuchMethodException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                        logger<span style="color:#f92672">.</span><span style="color:#a6e22e">info</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Failed to override the property &#34;</span> <span style="color:#f92672">+</span> method<span style="color:#f92672">.</span><span style="color:#a6e22e">getName</span><span style="color:#f92672">()</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; in &#34;</span> <span style="color:#f92672">+</span>
+                                <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">getClass</span><span style="color:#f92672">().</span><span style="color:#a6e22e">getSimpleName</span><span style="color:#f92672">()</span> <span style="color:#f92672">+</span>
+                                <span style="color:#e6db74">&#34;, please make sure every property has getter/setter method provided.&#34;</span><span style="color:#f92672">);</span>
+                    <span style="color:#f92672">}</span>
+                <span style="color:#f92672">}</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>Exception e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            logger<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Failed to override &#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div>
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+        
+    <span class="separator"><a class="tag" href="/tags/java/">java</a><a class="tag" href="/tags/dubbo/">dubbo</a></span>
+
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-appear.min.js"></script></html></body>
+
+</html>

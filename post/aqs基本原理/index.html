@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> flydzt | aqs基本原理(代码注释) </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.70.0" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="解决一类问题而不是一个问题">
+    <link rel="stylesheet" href="https://flydzt.github.io/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="https://flydzt.github.io">
+    
+    <link rel="shortcut icon" href="https://flydzt.github.io/images/hhh.jpgfavicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://flydzt.github.io/images/hhh.jpgapple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://flydzt.github.io/images/hhh.jpgfavicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://flydzt.github.io/images/hhh.jpgfavicon-16x16.png">
+
+    <link rel="canonical" href="https://flydzt.github.io/post/aqs%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/">
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="https://flydzt.github.io/images/hhh.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">FLYDZT</a></h3>
+        <div class="description">
+          <p>解决一类问题而不是一个问题</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://github.com/flydzt" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; flydzt 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/" title="">Home</a></li>
+
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>aqs基本原理(代码注释)
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Sat, Apr 11, 2020</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">4-minute read</span>
+        </div>
+        
+        </div>
+
+    <h2 id="基本思路">基本思路</h2>
+<p>通过cas去获取主动权,失败就去排队.持有锁的解锁后唤醒下一个, 被唤醒后的线程看看自己是不是排到了第一.</p>
+<p>值得注意的是,排队时候是可以取消的.从队列中删除某个节点,不能出现死循环,指向错误的问题.</p>
+<p>由于支持节点的取消:</p>
+<ul>
+<li>next是不可靠的, 只能使用prev去遍历</li>
+<li>遍历可能是不完全的,只靠release的时候去唤醒是不够的,取消的时候也要支持唤醒</li>
+</ul>
+<p>本文将描述三个部分: cas, 排队, 唤醒.</p>
+<p>基本上就是解释下面这个代码:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">acquire</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> arg<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#75715e">//tryAcquire 是一个cas操作 不成功就入队
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//addWaiter 入队 需要注意多个线程同时入队的操作
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//acquireQueued 判断自己是不是第一,不是的话继续park
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>tryAcquire<span style="color:#f92672">(</span>arg<span style="color:#f92672">)</span> <span style="color:#f92672">&amp;&amp;</span>
+            acquireQueued<span style="color:#f92672">(</span>addWaiter<span style="color:#f92672">(</span>Node<span style="color:#f92672">.</span><span style="color:#a6e22e">EXCLUSIVE</span><span style="color:#f92672">),</span> arg<span style="color:#f92672">))</span>
+            <span style="color:#75715e">//如果中途被发送了中断信号,那就中断自己
+</span><span style="color:#75715e"></span>            selfInterrupt<span style="color:#f92672">();</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div><h2 id="cas">cas</h2>
+<p>cas全称为compareAndSet. 比较和设值是一个原子操作, 例如cas(v, 1, 2), v是我要设值的变量, 1 为期望值, 2 为目标值. 只有v在等于1的时候能够被设置为2且返回true,其余时候都返回false.</p>
+<p>请务必保证v被volatile修饰,各线程才能正常竞争.</p>
+<h3 id="tryacquire">tryAcquire</h3>
+<p>有了cas,获取锁的操作就很简单.写了一个无法排队和阻塞的锁.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MyLock</span> <span style="color:#f92672">{</span>
+    <span style="color:#75715e">/**
+</span><span style="color:#75715e">     * 记录状态,每lock一次,就+1,反之-1
+</span><span style="color:#75715e">     */</span>
+    <span style="color:#66d9ef">private</span> AtomicInteger state <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> AtomicInteger<span style="color:#f92672">(</span>0<span style="color:#f92672">);</span>
+    <span style="color:#75715e">/**
+</span><span style="color:#75715e">     * 记录谁持有这个锁
+</span><span style="color:#75715e">     */</span>
+    <span style="color:#66d9ef">private</span> Thread current <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+
+    <span style="color:#75715e">/**
+</span><span style="color:#75715e">    * 尝试获取,非阻塞
+</span><span style="color:#75715e">    */</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">tryLock</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>current <span style="color:#f92672">==</span> Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">currentThread</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//本线程已经持有该锁,重入+1
+</span><span style="color:#75715e"></span>            state<span style="color:#f92672">.</span><span style="color:#a6e22e">addAndGet</span><span style="color:#f92672">(</span>1<span style="color:#f92672">);</span>
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>state<span style="color:#f92672">.</span><span style="color:#a6e22e">compareAndSet</span><span style="color:#f92672">(</span>0<span style="color:#f92672">,</span> 1<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//依靠cas最多只让一个线程到达这里
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//当然可以多判断一下state目前是不是等于0再cas
+</span><span style="color:#75715e"></span>            current <span style="color:#f92672">=</span> Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">currentThread</span><span style="color:#f92672">();</span>
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">unlock</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+        <span style="color:#75715e">//没有持有该锁的线程进行unlock抛错
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>current <span style="color:#f92672">!=</span> Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">currentThread</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalMonitorStateException<span style="color:#f92672">();</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>state<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">()</span> <span style="color:#f92672">==</span> 1<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//提前解绑 再把state置为0
+</span><span style="color:#75715e"></span>            current <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#75715e">//在java里面,只能通知一个线程中断,不存在抢占式中断.所以不用担心这里不能设置为0
+</span><span style="color:#75715e"></span>        state<span style="color:#f92672">.</span><span style="color:#a6e22e">addAndGet</span><span style="color:#f92672">(-</span>1<span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+
+</code></pre></div><p>但aqs的重点并不是cas,是排队,cas是一种同步的手段,只让一个线程操作成功.</p>
+<p>在ReentrantLock的实现中,有公平锁和非公平锁两种实现,顾名思义,公平锁不允许插队.已经有人在排队了,则只能添加到队列末位. 而非公平锁则允许插队.</p>
+<p>非公平锁存在饿死的情况,老是被插队,队列中的线程得不到执行的机会.但是和公平锁相比,在刚好锁可用的情况下,减少了一次线程的入队阻塞和一次线程的唤醒.性能会更好.</p>
+<p>ReentrantLock中的state是一个计数, 只要state&gt;0,肯定有一个独占线程.state==0,独占线程为null.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#75715e">//公平
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">tryAcquire</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> acquires<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">final</span> Thread current <span style="color:#f92672">=</span> Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">currentThread</span><span style="color:#f92672">();</span>
+        <span style="color:#66d9ef">int</span> c <span style="color:#f92672">=</span> getState<span style="color:#f92672">();</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>c <span style="color:#f92672">==</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//如果没人排队,并且cas成功才能获取到锁
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//是否有人排队的判断就算不够及时也没有关系,本线程进入排队后会立刻查看自己是否在第一位,如果是的话,就会获取到锁
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>hasQueuedPredecessors<span style="color:#f92672">()</span> <span style="color:#f92672">&amp;&amp;</span>
+            <span style="color:#75715e">//很多线程可以同时执行到这里.大家都认为没人排队
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//需要cas同步,只让一个人通过,否则会有多个线程同时获取锁
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//这个cas的时候,可能有人在排队了,也可能没人在排队但有人获取了锁,不过state都会是大于0
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//也有可能在短时间内,有人获取了锁又释放了,产生了aba问题,这时候是能成功cas的,aba在这个场景没有副作用
+</span><span style="color:#75715e"></span>                    compareAndSetState<span style="color:#f92672">(</span>0<span style="color:#f92672">,</span> acquires<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                <span style="color:#75715e">//设置独占线程
+</span><span style="color:#75715e"></span>                setExclusiveOwnerThread<span style="color:#f92672">(</span>current<span style="color:#f92672">);</span>
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>current <span style="color:#f92672">==</span> getExclusiveOwnerThread<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//如果已经持有 重入
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">int</span> nextc <span style="color:#f92672">=</span> c <span style="color:#f92672">+</span> acquires<span style="color:#f92672">;</span>
+            <span style="color:#75715e">//达到了最大值,溢出
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>nextc <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span>
+                <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Maximum lock count exceeded&#34;</span><span style="color:#f92672">);</span>
+            setState<span style="color:#f92672">(</span>nextc<span style="color:#f92672">);</span>
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+    <span style="color:#75715e">//非公平
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">nonfairTryAcquire</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> acquires<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">final</span> Thread current <span style="color:#f92672">=</span> Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">currentThread</span><span style="color:#f92672">();</span>
+        <span style="color:#66d9ef">int</span> c <span style="color:#f92672">=</span> getState<span style="color:#f92672">();</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>c <span style="color:#f92672">==</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//唯一的区别在于不需要判断是否有人在排队,其他是一样的
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>compareAndSetState<span style="color:#f92672">(</span>0<span style="color:#f92672">,</span> acquires<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                setExclusiveOwnerThread<span style="color:#f92672">(</span>current<span style="color:#f92672">);</span>
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>current <span style="color:#f92672">==</span> getExclusiveOwnerThread<span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">int</span> nextc <span style="color:#f92672">=</span> c <span style="color:#f92672">+</span> acquires<span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>nextc <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span> <span style="color:#75715e">// overflow
+</span><span style="color:#75715e"></span>                <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Maximum lock count exceeded&#34;</span><span style="color:#f92672">);</span>
+            setState<span style="color:#f92672">(</span>nextc<span style="color:#f92672">);</span>
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div><h2 id="排队">排队</h2>
+<p>排队的第一步是生成一个Node入队.aqs维护head和tail,队列为一个双向链表.</p>
+<p>每个node需要对应一个thread,也需要记录对应的状态.</p>
+<p>状态有</p>
+<ul>
+<li>cancelled = 1 表示被取消 被取消的node需要被移除队列
+<ul>
+<li>移出队列有几种方法,一种是被别人跳过,一种是取消时自我移除. 自我移除的同时,如果前面节点同时在取消,那么会失败</li>
+</ul>
+</li>
+<li>signal = -1 表示需要唤醒下一个node,换句话说:后面的node在这里打个标记,告知别人这个node后面有需要唤醒的node</li>
+<li>condition = -2 表示在wait condition</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">private</span> Node <span style="color:#a6e22e">addWaiter</span><span style="color:#f92672">(</span>Node mode<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#75715e">//acquire的mode是独占
+</span><span style="color:#75715e"></span>        Node node <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Node<span style="color:#f92672">(</span>mode<span style="color:#f92672">);</span>
+
+        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(;;)</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//当前的tail
+</span><span style="color:#75715e"></span>            Node oldTail <span style="color:#f92672">=</span> tail<span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>oldTail <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                <span style="color:#75715e">//prev指向旧tail,这时候tail可能是发生变化的
+</span><span style="color:#75715e"></span>                node<span style="color:#f92672">.</span><span style="color:#a6e22e">setPrevRelaxed</span><span style="color:#f92672">(</span>oldTail<span style="color:#f92672">);</span>
+                <span style="color:#75715e">//将tail通过cas设置成当前node 只有tail不变的情况下,才能设置成功
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//如果失败,有两种情况
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//一种是别的线程要入队比本线程更早成功
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//一种是tail节点被取消,而被移除队列
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//当然也可以存在一个node成为新tail然后又取消出队的情况,aba没有副作用
+</span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>compareAndSetTail<span style="color:#f92672">(</span>oldTail<span style="color:#f92672">,</span> node<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                    <span style="color:#75715e">//成功后,oldTail就是前一个节点了,将next指向新的tail
+</span><span style="color:#75715e"></span>                    <span style="color:#75715e">//如果这个时候oldTail被移除队列了,其实没有关系
+</span><span style="color:#75715e"></span>                    <span style="color:#75715e">//因为前面可用的node指向了本node.而oldTail的引用将不会有人再持有,等待垃圾回收
+</span><span style="color:#75715e"></span>                    oldTail<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> node<span style="color:#f92672">;</span>
+                    <span style="color:#66d9ef">return</span> node<span style="color:#f92672">;</span>
+                <span style="color:#f92672">}</span>
+            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+                <span style="color:#75715e">//队列还不存在,初始化一下
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//初始化也是通过cas(null, new Node())设置head, tail=head
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//也可能设置失败,被别的线程先设置了
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//头结点只是一个空结点
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//无论如何,都需要进入下一个循环去排队
+</span><span style="color:#75715e"></span>                initializeSyncQueue<span style="color:#f92672">();</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div><p>下图简单的表示两个线程想要排队的情形,是cas的直观表述,下图不包括队列为空,有人取消node等情形:</p>
+<p><img src="/images/juc/addWaiter.jpg" alt="addWaiter"></p>
+<p>入队后的node(thread),会在一个循环中,判断自己是不是排到了第一个,不是的话就挂起</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#75715e">//参数node就是入队时生成的node
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">acquireQueued</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> Node node<span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span> arg<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">boolean</span> interrupted <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//node自旋
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">for</span> <span style="color:#f92672">(;;)</span> <span style="color:#f92672">{</span>
+                <span style="color:#75715e">//前一个node
+</span><span style="color:#75715e"></span>                <span style="color:#66d9ef">final</span> Node p <span style="color:#f92672">=</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">predecessor</span><span style="color:#f92672">();</span>
+                <span style="color:#75715e">//如果前一个node是head并且抢到了主动权
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//按道理我被唤醒只要前一个是head(head是一个空结点),就轮到我执行了
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//公平锁的情况下,我肯定能tryAcquire成功
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//但是非公平锁的情况下,就算我的前一个是head,tryAcquire不一定是会成功的
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//因为非公平锁,别的线程可以不考虑队列是否为空就去tryAcquire,本线程是和别的线程一起竞争
+</span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>p <span style="color:#f92672">==</span> head <span style="color:#f92672">&amp;&amp;</span> tryAcquire<span style="color:#f92672">(</span>arg<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                    <span style="color:#75715e">//如果我获取成功了,那我已经获取了锁了
+</span><span style="color:#75715e"></span>                    <span style="color:#75715e">//把本节点设置为head,并且将thread置空,成为空节点
+</span><span style="color:#75715e"></span>                    setHead<span style="color:#f92672">(</span>node<span style="color:#f92672">);</span>
+                    p<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span> <span style="color:#75715e">// help GC
+</span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">return</span> interrupted<span style="color:#f92672">;</span>
+                <span style="color:#f92672">}</span>
+                <span style="color:#75715e">//否则判断一下是否需要park
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//虽然我的前面一个node不是head,但是可能前面的节点都是被取消的
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//我只要清理掉取消的node,我的前一个node就可能是head了
+</span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>shouldParkAfterFailedAcquire<span style="color:#f92672">(</span>p<span style="color:#f92672">,</span> node<span style="color:#f92672">))</span>
+                    <span style="color:#75715e">//native park 等待被唤醒
+</span><span style="color:#75715e"></span>                    <span style="color:#75715e">//可能是中断唤醒的,而不是被正常唤醒的
+</span><span style="color:#75715e"></span>                    interrupted <span style="color:#f92672">|=</span> parkAndCheckInterrupt<span style="color:#f92672">();</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>Throwable t<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//出现问题 取消
+</span><span style="color:#75715e"></span>            cancelAcquire<span style="color:#f92672">(</span>node<span style="color:#f92672">);</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>interrupted<span style="color:#f92672">)</span>
+                selfInterrupt<span style="color:#f92672">();</span>
+            <span style="color:#66d9ef">throw</span> t<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#75715e">//判断是否需要park
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">shouldParkAfterFailedAcquire</span><span style="color:#f92672">(</span>Node pred<span style="color:#f92672">,</span> Node node<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">int</span> ws <span style="color:#f92672">=</span> pred<span style="color:#f92672">.</span><span style="color:#a6e22e">waitStatus</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>ws <span style="color:#f92672">==</span> Node<span style="color:#f92672">.</span><span style="color:#a6e22e">SIGNAL</span><span style="color:#f92672">)</span>
+            <span style="color:#75715e">//已经做过清理打过标记了,安心去park
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//但是假设我排在第二,我先判断第一节点是signal的,然后park了,接着持有锁的线程释放锁,第一个节点被unpark
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//恰好这时候第一节点又被取消了,unpark会拿到一个取消结点,那么按照顺序本节点应该要被唤醒
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//所以unpark需要遍历去找到第二个节点,next是不可靠的,只能靠prev去遍历
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//但prev遍历也会存在无法遍历全节点的问题
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//假如我是在prev遍历的时候加入的,遍历时队列只有第一个取消结点,接着加入了第二个可用结点,那么遍历会认为队列是空了
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//所以需要第一个节点取消的时候去唤醒第二个节点,所以取消操作的时候,如果前一个节点是头结点,需要唤醒下一个可用结点
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+        <span style="color:#75715e">//前一个node是取消的
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//就算做过清理了,清理后可能被置为取消.cas为signal没有成功
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>ws <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//如果前置节点是取消状态,那么清理掉前面连续的取消结点.
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//如果前面的node被取消,并且在做自我清理,不会影响到这里,当然自我清理可能失败
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//一个节点不能从取消回到非取消状态,那么只要是取消就可以跳过
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//自我清理失败的结果是:prev指向了前面,而前面对应的next没有指向取消结点的下一个结点
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">do</span> <span style="color:#f92672">{</span>
+                node<span style="color:#f92672">.</span><span style="color:#a6e22e">prev</span> <span style="color:#f92672">=</span> pred <span style="color:#f92672">=</span> pred<span style="color:#f92672">.</span><span style="color:#a6e22e">prev</span><span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span> <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>pred<span style="color:#f92672">.</span><span style="color:#a6e22e">waitStatus</span> <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">);</span>
+            <span style="color:#75715e">//这里是唯二能够真正清理掉取消结点的地方
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//还有一个是cancel的时候,把前一个可用结点的next做cas操作指向后面
+</span><span style="color:#75715e"></span>            pred<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> node<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//这时候,这个节点可能在取消,那么ws就会是cancel,就不能设置为signal
+</span><span style="color:#75715e"></span>            pred<span style="color:#f92672">.</span><span style="color:#a6e22e">compareAndSetWaitStatus</span><span style="color:#f92672">(</span>ws<span style="color:#f92672">,</span> Node<span style="color:#f92672">.</span><span style="color:#a6e22e">SIGNAL</span><span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#75715e">//那就再来一次
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">cancelAcquire</span><span style="color:#f92672">(</span>Node node<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#75715e">// Ignore if node doesn&#39;t exist
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+            <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
+        <span style="color:#75715e">//置空 成为空node
+</span><span style="color:#75715e"></span>        node<span style="color:#f92672">.</span><span style="color:#a6e22e">thread</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+
+        <span style="color:#75715e">// 跳过被取消的node
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// 但是停下的地方可能一会儿也被取消
+</span><span style="color:#75715e"></span>        Node pred <span style="color:#f92672">=</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">prev</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span>pred<span style="color:#f92672">.</span><span style="color:#a6e22e">waitStatus</span> <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span>
+            node<span style="color:#f92672">.</span><span style="color:#a6e22e">prev</span> <span style="color:#f92672">=</span> pred <span style="color:#f92672">=</span> pred<span style="color:#f92672">.</span><span style="color:#a6e22e">prev</span><span style="color:#f92672">;</span>
+
+        <span style="color:#75715e">//pred取消了, predNext可能是pred
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//也可能一会儿发生改变
+</span><span style="color:#75715e"></span>        Node predNext <span style="color:#f92672">=</span> pred<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span><span style="color:#f92672">;</span>
+
+        <span style="color:#75715e">//置为取消状态
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//可能有别的结点把这个结点设置成了signal,取消就是了
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//但这时候后面的节点先判断是signal然后去park了,结果这里又被设置为取消,那么后面的节点可能需要被唤醒
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//是否要唤醒,依赖于前方是否还有可用结点,如果有的话,那就不需要了,如果没有,那就是需要的
+</span><span style="color:#75715e"></span>        node<span style="color:#f92672">.</span><span style="color:#a6e22e">waitStatus</span> <span style="color:#f92672">=</span> Node<span style="color:#f92672">.</span><span style="color:#a6e22e">CANCELLED</span><span style="color:#f92672">;</span>
+
+        <span style="color:#75715e">//如果是尾结点,将最后一个非取消结点置为尾结点
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//如果有新的线程入队,cas将会失败.但是入队操作会帮我们把node的next指向了新的tail,这样就把node留在了队列里.
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//不过新的入队线程会马上把我们给跳过清理掉
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//这里也可能aba,新线程入队,马上被取消出队,没有副作用
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//pred这时候可能是取消的
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>node <span style="color:#f92672">==</span> tail <span style="color:#f92672">&amp;&amp;</span> compareAndSetTail<span style="color:#f92672">(</span>node<span style="color:#f92672">,</span> pred<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//把尾结点的next置为null
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//如果这时候又有新的入队,则next已经不是predNext,将会失败
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//或者pred取消了,指向了自己
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//或者pred取消前新线程入队,新线程还未将oldTail的next指向新node,pred取消后next指向自己,然后又被新线程指向了新的tail
+</span><span style="color:#75715e"></span>            pred<span style="color:#f92672">.</span><span style="color:#a6e22e">compareAndSetNext</span><span style="color:#f92672">(</span>predNext<span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">int</span> ws<span style="color:#f92672">;</span>
+            <span style="color:#75715e">//如果前一个有效结点不是头结点 尝试把前一个有效结点置为signal
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//如果前一个节点这时候取消了,那么就会失败
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//能置成功或者本来就是signal的,说明前面这个结点没有被取消,否则就不清楚前方什么情况
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//那么需要调用unpark,指不定前方没有节点可用了
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>pred <span style="color:#f92672">!=</span> head <span style="color:#f92672">&amp;&amp;</span>
+                <span style="color:#f92672">((</span>ws <span style="color:#f92672">=</span> pred<span style="color:#f92672">.</span><span style="color:#a6e22e">waitStatus</span><span style="color:#f92672">)</span> <span style="color:#f92672">==</span> Node<span style="color:#f92672">.</span><span style="color:#a6e22e">SIGNAL</span> <span style="color:#f92672">||</span>
+                <span style="color:#f92672">(</span>ws <span style="color:#f92672">&lt;=</span> 0 <span style="color:#f92672">&amp;&amp;</span> pred<span style="color:#f92672">.</span><span style="color:#a6e22e">compareAndSetWaitStatus</span><span style="color:#f92672">(</span>ws<span style="color:#f92672">,</span> Node<span style="color:#f92672">.</span><span style="color:#a6e22e">SIGNAL</span><span style="color:#f92672">)))</span>
+                <span style="color:#f92672">&amp;&amp;</span> pred<span style="color:#f92672">.</span><span style="color:#a6e22e">thread</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                <span style="color:#75715e">//进到这里只是为了确定,前一个节点此时没有被取消
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//如果进来后前一个结点要取消或者取消到一半,不会影响到后面的操作
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//每一个取消操作,都可能调用unpark,所以我只保证前面有节点可用,我就不会去unpark
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//如果没有进来,说明我不知道前面是否有节点可用,保守起见,我调用unpark
+</span><span style="color:#75715e"></span>                Node next <span style="color:#f92672">=</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span><span style="color:#f92672">;</span>
+                <span style="color:#75715e">//尝试摘掉自己和前面所有的取消结点
+</span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>next <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> next<span style="color:#f92672">.</span><span style="color:#a6e22e">waitStatus</span> <span style="color:#f92672">&lt;=</span> 0<span style="color:#f92672">)</span>
+                    <span style="color:#75715e">//pred的next可能指向了自己,也可能指向了更后面的节点
+</span><span style="color:#75715e"></span>                    <span style="color:#75715e">//1 pred取消后指向了自己
+</span><span style="color:#75715e"></span>                    <span style="color:#75715e">//2 有更后面的取消结点比我更先操作pred,那么pred会指向更后面,比如pred成了尾结点
+</span><span style="color:#75715e"></span>                    pred<span style="color:#f92672">.</span><span style="color:#a6e22e">compareAndSetNext</span><span style="color:#f92672">(</span>predNext<span style="color:#f92672">,</span> next<span style="color:#f92672">);</span>
+            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+                <span style="color:#75715e">//前一个节点可能是head,那么需要唤醒下一个node
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//这里的这个操作是必要的
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//只靠release来唤醒是不够的 如果刚好有新线程在入队,那么release操作就无法遍历到新线程去唤醒
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">//另一方面,不清楚前方状况,全局看一下
+</span><span style="color:#75715e"></span>                unparkSuccessor<span style="color:#f92672">(</span>node<span style="color:#f92672">);</span>
+            <span style="color:#f92672">}</span>
+
+            <span style="color:#75715e">//如果这时候后面的节点都被取消了,这个结点成了尾结点,这个next可能在新线程入队的时候又被指向了新的tail
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//也可能在shouldPark往前跳过取消结点时,赋值给下一个结点
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//如果这里不做这个操作,同时acquireQueued函数里,head.next不被置为null,next遍历也会是可靠的??
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//只要next不会指向前面的结点形成循环,不会被置为null
+</span><span style="color:#75715e"></span>            node<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> node<span style="color:#f92672">;</span> <span style="color:#75715e">// help GC
+</span><span style="color:#75715e"></span>        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div><h2 id="唤醒">唤醒</h2>
+<p>release后,将自己置为signal,唤醒下一个node.如果没有人在排队,直接返回.</p>
+<h3 id="tryrelease">tryRelease</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">tryRelease</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> releases<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#75715e">//和tryAcquire相反的操作 就不会区分公平非公平了,因为只有一个线程获取了锁
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">int</span> c <span style="color:#f92672">=</span> getState<span style="color:#f92672">()</span> <span style="color:#f92672">-</span> releases<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>Thread<span style="color:#f92672">.</span><span style="color:#a6e22e">currentThread</span><span style="color:#f92672">()</span> <span style="color:#f92672">!=</span> getExclusiveOwnerThread<span style="color:#f92672">())</span>
+            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalMonitorStateException<span style="color:#f92672">();</span>
+        <span style="color:#66d9ef">boolean</span> free <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>c <span style="color:#f92672">==</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            free <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+            <span style="color:#75715e">//先置空线程
+</span><span style="color:#75715e"></span>            setExclusiveOwnerThread<span style="color:#f92672">(</span><span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span>
+        setState<span style="color:#f92672">(</span>c<span style="color:#f92672">);</span>
+        <span style="color:#66d9ef">return</span> free<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">release</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> arg<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#75715e">//只有之前acquire成功的才能tryRelease成功
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>tryRelease<span style="color:#f92672">(</span>arg<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+            Node h <span style="color:#f92672">=</span> head<span style="color:#f92672">;</span>
+            <span style="color:#75715e">//如果acquire是在队列空的时候,不用排队,也就没有head
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>h <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> h<span style="color:#f92672">.</span><span style="color:#a6e22e">waitStatus</span> <span style="color:#f92672">!=</span> 0<span style="color:#f92672">)</span>
+                <span style="color:#75715e">//如果有队列的话,唤醒head下一个node
+</span><span style="color:#75715e"></span>                unparkSuccessor<span style="color:#f92672">(</span>h<span style="color:#f92672">);</span>
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#75715e">//如果这时候有人排队了,要靠它自己入队时的自旋来获取锁
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//就不是触发式的
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">unparkSuccessor</span><span style="color:#f92672">(</span>Node node<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#75715e">/*
+</span><span style="color:#75715e">         * If status is negative (i.e., possibly needing signal) try
+</span><span style="color:#75715e">         * to clear in anticipation of signalling.  It is OK if this
+</span><span style="color:#75715e">         * fails or if status is changed by waiting thread.
+</span><span style="color:#75715e">         */</span>
+        <span style="color:#66d9ef">int</span> ws <span style="color:#f92672">=</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">waitStatus</span><span style="color:#f92672">;</span>
+
+        <span style="color:#75715e">//清理状态
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>ws <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span>
+            node<span style="color:#f92672">.</span><span style="color:#a6e22e">compareAndSetWaitStatus</span><span style="color:#f92672">(</span>ws<span style="color:#f92672">,</span> 0<span style="color:#f92672">);</span>
+
+        <span style="color:#75715e">//这里node.next可能会是node自身
+</span><span style="color:#75715e"></span>        Node s <span style="color:#f92672">=</span> node<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span><span style="color:#f92672">;</span>
+        <span style="color:#75715e">//下一个结点是个空或者在取消
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>s <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">||</span> s<span style="color:#f92672">.</span><span style="color:#a6e22e">waitStatus</span> <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            s <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+            <span style="color:#75715e">//从后往前遍历找到最前面的
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//如果是从前往后去找,找到某个节点后,这个结点被取消,然后next指向了自己,就悲剧了.
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//如果有新线程入队,这个新线程不能被遍历到,这点会带来一个隐患,是node自旋无法解决的:
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//考虑p赋值为tail后, 新线程入队,然后新线程查看自己是不是第一位
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//不是第一位,然后尝试往前跳过取消结点,发现依然不是第一位
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//这时候新线程被挂起,接着前面的节点都取消了
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//这时候除了取消操作里去唤起,没有别的操作能唤起这个线程了
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//所以cancel的函数里是需要调用本函数的
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>Node p <span style="color:#f92672">=</span> tail<span style="color:#f92672">;</span> p <span style="color:#f92672">!=</span> node <span style="color:#f92672">&amp;&amp;</span> p <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span> p <span style="color:#f92672">=</span> p<span style="color:#f92672">.</span><span style="color:#a6e22e">prev</span><span style="color:#f92672">)</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>p<span style="color:#f92672">.</span><span style="color:#a6e22e">waitStatus</span> <span style="color:#f92672">&lt;=</span> 0<span style="color:#f92672">)</span>
+                    s <span style="color:#f92672">=</span> p<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#75715e">//可能队列空了,可能是新线程没有被遍历到
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>s <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+            LockSupport<span style="color:#f92672">.</span><span style="color:#a6e22e">unpark</span><span style="color:#f92672">(</span>s<span style="color:#f92672">.</span><span style="color:#a6e22e">thread</span><span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div>
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+        
+    <span class="separator"><a class="tag" href="/tags/java/">java</a><a class="tag" href="/tags/concurrent/">concurrent</a></span>
+
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-appear.min.js"></script></html></body>
+
+</html>

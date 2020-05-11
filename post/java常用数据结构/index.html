@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> flydzt | java常用数据结构 </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.70.0" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="解决一类问题而不是一个问题">
+    <link rel="stylesheet" href="https://flydzt.github.io/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="https://flydzt.github.io">
+    
+    <link rel="shortcut icon" href="https://flydzt.github.io/images/hhh.jpgfavicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://flydzt.github.io/images/hhh.jpgapple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://flydzt.github.io/images/hhh.jpgfavicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://flydzt.github.io/images/hhh.jpgfavicon-16x16.png">
+
+    <link rel="canonical" href="https://flydzt.github.io/post/java%E5%B8%B8%E7%94%A8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="https://flydzt.github.io/images/hhh.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">FLYDZT</a></h3>
+        <div class="description">
+          <p>解决一类问题而不是一个问题</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://github.com/flydzt" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; flydzt 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/" title="">Home</a></li>
+
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>java常用数据结构
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Wed, Apr 1, 2020</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">5-minute read</span>
+        </div>
+        
+        </div>
+
+    <h2 id="特点">特点</h2>
+<h3 id="初始化容量">初始化容量</h3>
+<p>不传入容量的初始化,一般只设置一个容量/负载因子(或者什么都不做),不会去分配空间.例如:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">ArrayList</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+        <span style="color:#75715e">//空列表 复用对象,只有容量发生变化的时候才分配.
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//下次add会分配10个
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">elementData</span> <span style="color:#f92672">=</span> DEFAULTCAPACITY_EMPTY_ELEMENTDATA<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">HashMap</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+        <span style="color:#75715e">//负载因子0.75
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">loadFactor</span> <span style="color:#f92672">=</span> DEFAULT_LOAD_FACTOR<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">LinkedList</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">ConcurrentHashMap</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div><p>如果明确不会修改,例如缓存场景,可以使用Collections.emptyXxx()来复用对象.</p>
+<p>如果指定了capacity,首先需要校验capacity的有效性,然后根据需要分配容量.例如:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">ArrayList</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> initialCapacity<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>initialCapacity <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">elementData</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Object<span style="color:#f92672">[</span>initialCapacity<span style="color:#f92672">];</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>initialCapacity <span style="color:#f92672">==</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//空列表 复用对象,只有容量发生变化的时候才分配.
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//传入0,就是明确说,我使用的size很小.所以下次add的时候只分配1个
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">elementData</span> <span style="color:#f92672">=</span> EMPTY_ELEMENTDATA<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalArgumentException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Illegal Capacity: &#34;</span><span style="color:#f92672">+</span>
+                                               initialCapacity<span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#75715e">//LinkedList不能指定容量,由于LinkedList的性质,容量就是size
+</span><span style="color:#75715e"></span>
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">HashMap</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> initialCapacity<span style="color:#f92672">,</span> <span style="color:#66d9ef">float</span> loadFactor<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>initialCapacity <span style="color:#f92672">&lt;</span> 0<span style="color:#f92672">)</span>
+            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalArgumentException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Illegal initial capacity: &#34;</span> <span style="color:#f92672">+</span>
+                                               initialCapacity<span style="color:#f92672">);</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>initialCapacity <span style="color:#f92672">&gt;</span> MAXIMUM_CAPACITY<span style="color:#f92672">)</span>
+            <span style="color:#75715e">//1&lt;&lt;&lt;30
+</span><span style="color:#75715e"></span>            initialCapacity <span style="color:#f92672">=</span> MAXIMUM_CAPACITY<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>loadFactor <span style="color:#f92672">&lt;=</span> 0 <span style="color:#f92672">||</span> Float<span style="color:#f92672">.</span><span style="color:#a6e22e">isNaN</span><span style="color:#f92672">(</span>loadFactor<span style="color:#f92672">))</span>
+            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IllegalArgumentException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Illegal load factor: &#34;</span> <span style="color:#f92672">+</span>
+                                               loadFactor<span style="color:#f92672">);</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">loadFactor</span> <span style="color:#f92672">=</span> loadFactor<span style="color:#f92672">;</span>
+        <span style="color:#75715e">//这里需要往上求得最接近的2的幂 可以用 -1&gt;&gt;&gt;前缀0个数 来快速求得
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//前缀0可以二分求得
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// int n = 31;
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// if (i &gt;= 1 &lt;&lt; 16) { n -= 16; i &gt;&gt;&gt;= 16; }
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// if (i &gt;= 1 &lt;&lt;  8) { n -=  8; i &gt;&gt;&gt;=  8; }
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// if (i &gt;= 1 &lt;&lt;  4) { n -=  4; i &gt;&gt;&gt;=  4; }
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// if (i &gt;= 1 &lt;&lt;  2) { n -=  2; i &gt;&gt;&gt;=  2; }
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// return n - (i &gt;&gt;&gt; 1);
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//最少需要1的容量
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">threshold</span> <span style="color:#f92672">=</span> tableSizeFor<span style="color:#f92672">(</span>initialCapacity<span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#75715e">//ConcurrentHashMap和HashMap一样
+</span></code></pre></div><h3 id="线程安全">线程安全</h3>
+<p>对于非线程安全的数据结构,在通过equals或者迭代器遍历/修改时,如果其他线程同时进行修改,则会抛错.</p>
+<p>在迭代器中记录exceptedModCount.</p>
+<p>或者在希望不变的代码块前记录exceptedModCount=modCount,在之后比较.如果有变化则抛错.</p>
+<p>在线程间共享对象时,使用线程安全对象,例如ConcurrentHashMap.使用非线程安全对象,如果明确要修改,则加锁.否则套一层Collections.UnmodifiableXxx让业务在使用时就知道这是不能修改的.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#75715e">//AbstractList
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">transient</span> <span style="color:#66d9ef">int</span> modCount <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span>
+
+    <span style="color:#75715e">//Itr
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> expectedModCount <span style="color:#f92672">=</span> modCount<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">checkForComodification</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> <span style="color:#66d9ef">int</span> expectedModCount<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>modCount <span style="color:#f92672">!=</span> expectedModCount<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> ConcurrentModificationException<span style="color:#f92672">();</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div><p>在使用HashMap作为缓存时,只做get/put,value计算比较耗时,为了不影响其他线程,可以使用Holder来占位,这样可以把竞争减少到一个key上.而不是锁住整个map.更一般的,可以用FutureTask来做占位,效果是一样的.使用ConcurrntHashMap能更方便,只需要使用putIfAbsent来做原子操作.</p>
+<p>当然可以使用guava_cache/caffein来做更精细的缓存.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">final</span> Map<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">,</span> Holder<span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;&gt;</span> cache <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> HashMap<span style="color:#f92672">&lt;&gt;();</span>
+
+    <span style="color:#66d9ef">public</span> T <span style="color:#a6e22e">getValue</span><span style="color:#f92672">(</span>String key<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        Holder<span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span> holder <span style="color:#f92672">=</span> cache<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>key<span style="color:#f92672">);</span>
+        <span style="color:#75715e">//如果还没有holder
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//在1.7及之前 get在扩容的时候会产生死循环
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//1.8之后,不会死循环,只可能获取到null值
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//在这个场景,即使获取了null也没有关系.会进行二重判断
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>holder <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>cache<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                <span style="color:#75715e">//二重判断
+</span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>cache<span style="color:#f92672">.</span><span style="color:#a6e22e">containsKey</span><span style="color:#f92672">(</span>key<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+                    cache<span style="color:#f92672">.</span><span style="color:#a6e22e">put</span><span style="color:#f92672">(</span>key<span style="color:#f92672">,</span> <span style="color:#66d9ef">new</span> Holder<span style="color:#f92672">&lt;&gt;());</span>
+                <span style="color:#f92672">}</span>
+            <span style="color:#f92672">}</span>
+            holder <span style="color:#f92672">=</span> cache<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>key<span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>holder<span style="color:#f92672">.</span><span style="color:#a6e22e">getData</span><span style="color:#f92672">()</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//将耗时操作的同步落到每个key上
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">synchronized</span> <span style="color:#f92672">(</span>holder<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                <span style="color:#75715e">//二重判断
+</span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>holder<span style="color:#f92672">.</span><span style="color:#a6e22e">getData</span><span style="color:#f92672">()</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                    <span style="color:#75715e">//这里去获取数据 并设置
+</span><span style="color:#75715e"></span>                    holder<span style="color:#f92672">.</span><span style="color:#a6e22e">setData</span><span style="color:#f92672">(</span>methodSpendLongTime<span style="color:#f92672">());</span>
+                <span style="color:#f92672">}</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">return</span> holder<span style="color:#f92672">.</span><span style="color:#a6e22e">getData</span><span style="color:#f92672">();</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">final</span> ConcurrentMap<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">,</span> FutureTask<span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;&gt;</span> cache <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ConcurrentHashMap<span style="color:#f92672">&lt;&gt;();</span>
+
+    <span style="color:#66d9ef">public</span> T <span style="color:#a6e22e">getValue</span><span style="color:#f92672">(</span>String key<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        FutureTask<span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span> task <span style="color:#f92672">=</span> cache<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>key<span style="color:#f92672">);</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>task <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            FutureTask<span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span> newTask <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> FutureTask<span style="color:#f92672">&lt;&gt;(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">::</span>methodSpendLongTime<span style="color:#f92672">);</span>
+            task <span style="color:#f92672">=</span> cache<span style="color:#f92672">.</span><span style="color:#a6e22e">putIfAbsent</span><span style="color:#f92672">(</span>key<span style="color:#f92672">,</span> newTask<span style="color:#f92672">);</span>
+            <span style="color:#75715e">//我是第一个put的
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>task <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                task <span style="color:#f92672">=</span> newTask<span style="color:#f92672">;</span>
+                <span style="color:#75715e">//同步run
+</span><span style="color:#75715e"></span>                task<span style="color:#f92672">.</span><span style="color:#a6e22e">run</span><span style="color:#f92672">();</span>
+            <span style="color:#f92672">}</span>
+
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//直到就绪
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">return</span> task<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">();</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>InterruptedException <span style="color:#f92672">|</span> ExecutionException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//throw or handle
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div><h2 id="list">List</h2>
+<p>List是为了顺序的存取元素.</p>
+<p>ArrayList&lt;E&gt;使用连续的空间来存数据.get和set的时候能够通过index计算出对应的地址,O(1)即可取出.add的时候,根据位置的不同,如果在末位,也是O(1)的,如果是在中间,则需要进行内存拷贝,可以认为是O(n)的.如果容量满了,则需要扩容.扩容是O(n)操作.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#75715e">//取出时 转为E
+</span><span style="color:#75715e"></span>    Object<span style="color:#f92672">[]</span> elementData<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">private</span> Object<span style="color:#f92672">[]</span> <span style="color:#a6e22e">grow</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> minCapacity<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">int</span> oldCapacity <span style="color:#f92672">=</span> elementData<span style="color:#f92672">.</span><span style="color:#a6e22e">length</span><span style="color:#f92672">;</span>
+        <span style="color:#75715e">//容量大于0或者使用带容量的初始化 新的容量扩为1.5倍
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//addAll的时候,如果超过1.5倍,则使用addAll后的容量
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>oldCapacity <span style="color:#f92672">&gt;</span> 0 <span style="color:#f92672">||</span> elementData <span style="color:#f92672">!=</span> DEFAULTCAPACITY_EMPTY_ELEMENTDATA<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">int</span> newCapacity <span style="color:#f92672">=</span> ArraysSupport<span style="color:#f92672">.</span><span style="color:#a6e22e">newLength</span><span style="color:#f92672">(</span>oldCapacity<span style="color:#f92672">,</span>
+                    minCapacity <span style="color:#f92672">-</span> oldCapacity<span style="color:#f92672">,</span> <span style="color:#75715e">/* 最小扩容 */</span>
+                    oldCapacity <span style="color:#f92672">&gt;&gt;</span> 1           <span style="color:#75715e">/* 期望扩容 */</span><span style="color:#f92672">);</span>
+            <span style="color:#66d9ef">return</span> elementData <span style="color:#f92672">=</span> Arrays<span style="color:#f92672">.</span><span style="color:#a6e22e">copyOf</span><span style="color:#f92672">(</span>elementData<span style="color:#f92672">,</span> newCapacity<span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//这里是不带容量的初始化 区分出ArrayList(0) 会扩展为10个 或者addAll后的容量
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">return</span> elementData <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Object<span style="color:#f92672">[</span>Math<span style="color:#f92672">.</span><span style="color:#a6e22e">max</span><span style="color:#f92672">(</span>DEFAULT_CAPACITY<span style="color:#f92672">,</span> minCapacity<span style="color:#f92672">)];</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+</code></pre></div><p>LinkedList&lt;E&gt;使用Node来进行连接,是一个双向的列表.持有first和last两个对象来实现快速的addLast和addFirst. get/set特定index的元素,需要进行遍历,是O(n)操作. 增删由于地址的分散,只需要改变前后指针即可,为O(1)操作. 由于维护了size字段,所以取size不需要遍历.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">linkLast</span><span style="color:#f92672">(</span>E e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">final</span> Node<span style="color:#f92672">&lt;</span>E<span style="color:#f92672">&gt;</span> l <span style="color:#f92672">=</span> last<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">final</span> Node<span style="color:#f92672">&lt;</span>E<span style="color:#f92672">&gt;</span> newNode <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Node<span style="color:#f92672">&lt;&gt;(</span>l<span style="color:#f92672">,</span> e<span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>
+        last <span style="color:#f92672">=</span> newNode<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>l <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+            first <span style="color:#f92672">=</span> newNode<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span>
+            l<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> newNode<span style="color:#f92672">;</span>
+        size<span style="color:#f92672">++;</span>
+        modCount<span style="color:#f92672">++;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#75715e">//使用迭代器时,迭代器会维护 Node next.
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">//空列表插入时使用linkLast方法 而不是linkBefore
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">linkBefore</span><span style="color:#f92672">(</span>E e<span style="color:#f92672">,</span> Node<span style="color:#f92672">&lt;</span>E<span style="color:#f92672">&gt;</span> succ<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#75715e">// assert succ != null;
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">final</span> Node<span style="color:#f92672">&lt;</span>E<span style="color:#f92672">&gt;</span> pred <span style="color:#f92672">=</span> succ<span style="color:#f92672">.</span><span style="color:#a6e22e">prev</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">final</span> Node<span style="color:#f92672">&lt;</span>E<span style="color:#f92672">&gt;</span> newNode <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Node<span style="color:#f92672">&lt;&gt;(</span>pred<span style="color:#f92672">,</span> e<span style="color:#f92672">,</span> succ<span style="color:#f92672">);</span>
+        succ<span style="color:#f92672">.</span><span style="color:#a6e22e">prev</span> <span style="color:#f92672">=</span> newNode<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>pred <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+            first <span style="color:#f92672">=</span> newNode<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span>
+            pred<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> newNode<span style="color:#f92672">;</span>
+        size<span style="color:#f92672">++;</span>
+        modCount<span style="color:#f92672">++;</span>
+    <span style="color:#f92672">}</span>
+
+</code></pre></div><h2 id="setmap">Set/Map</h2>
+<p>Set在实现上就是使用Map.value使用同一个new Object().</p>
+<p>HashMap内部使用 Node&lt;K,V&gt;[] 来存储数据,Node包括key,value,hash值,next(以组成链表). HashMap基于key的hashCode来做hash. Node可以扩展为一个链表结构, 如果容量超过7,则转成红黑树.</p>
+<p>HashMap取bucket就是取hash值的末n位,n为容量的2^n.在扩容时,第n+1位如果是1,则移动到高位,高位是往后移动2^n位,否则保留在原地.因为在n+1为是0的时候,hash值取n+1位和取n位是一样的结果.并且由于hash值的随机性,移动的概率为50%.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">hash</span><span style="color:#f92672">(</span>Object key<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">int</span> h<span style="color:#f92672">;</span>
+        <span style="color:#75715e">//因为是2的幂作为容量,容量较小时,高位的bit不会参与运算.把高位的挪下来参与计算.
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">(</span>key <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">?</span> 0 <span style="color:#f92672">:</span> <span style="color:#f92672">(</span>h <span style="color:#f92672">=</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">hashCode</span><span style="color:#f92672">())</span> <span style="color:#f92672">^</span> <span style="color:#f92672">(</span>h <span style="color:#f92672">&gt;&gt;&gt;</span> 16<span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span>
+
+
+    <span style="color:#66d9ef">final</span> V <span style="color:#a6e22e">putVal</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> hash<span style="color:#f92672">,</span> K key<span style="color:#f92672">,</span> V value<span style="color:#f92672">,</span> <span style="color:#66d9ef">boolean</span> onlyIfAbsent<span style="color:#f92672">,</span>
+                   <span style="color:#66d9ef">boolean</span> evict<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        Node<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;[]</span> tab<span style="color:#f92672">;</span> Node<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;</span> p<span style="color:#f92672">;</span> <span style="color:#66d9ef">int</span> n<span style="color:#f92672">,</span> i<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">((</span>tab <span style="color:#f92672">=</span> table<span style="color:#f92672">)</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">||</span> <span style="color:#f92672">(</span>n <span style="color:#f92672">=</span> tab<span style="color:#f92672">.</span><span style="color:#a6e22e">length</span><span style="color:#f92672">)</span> <span style="color:#f92672">==</span> 0<span style="color:#f92672">)</span>
+            <span style="color:#75715e">//初始化的时候不分配空间 等到put才分配空间
+</span><span style="color:#75715e"></span>            n <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>tab <span style="color:#f92672">=</span> resize<span style="color:#f92672">()).</span><span style="color:#a6e22e">length</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">((</span>p <span style="color:#f92672">=</span> tab<span style="color:#f92672">[</span>i <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>n <span style="color:#f92672">-</span> 1<span style="color:#f92672">)</span> <span style="color:#f92672">&amp;</span> hash<span style="color:#f92672">])</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+            <span style="color:#75715e">//如果对应Node还没有值 直接赋值即可
+</span><span style="color:#75715e"></span>            tab<span style="color:#f92672">[</span>i<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> newNode<span style="color:#f92672">(</span>hash<span style="color:#f92672">,</span> key<span style="color:#f92672">,</span> value<span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+            Node<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;</span> e<span style="color:#f92672">;</span> K k<span style="color:#f92672">;</span>
+            <span style="color:#75715e">//p为链表的第一个节点 hash值相同 并且 key为同一个引用或者equals
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>p<span style="color:#f92672">.</span><span style="color:#a6e22e">hash</span> <span style="color:#f92672">==</span> hash <span style="color:#f92672">&amp;&amp;</span>
+                <span style="color:#f92672">((</span>k <span style="color:#f92672">=</span> p<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span> <span style="color:#f92672">==</span> key <span style="color:#f92672">||</span> <span style="color:#f92672">(</span>key <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span>k<span style="color:#f92672">))))</span>
+                e <span style="color:#f92672">=</span> p<span style="color:#f92672">;</span>
+            <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>p <span style="color:#66d9ef">instanceof</span> TreeNode<span style="color:#f92672">)</span>
+                <span style="color:#75715e">//如果已经转成红黑树了,使用红黑树的put
+</span><span style="color:#75715e"></span>                e <span style="color:#f92672">=</span> <span style="color:#f92672">((</span>TreeNode<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;)</span>p<span style="color:#f92672">).</span><span style="color:#a6e22e">putTreeVal</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">,</span> tab<span style="color:#f92672">,</span> hash<span style="color:#f92672">,</span> key<span style="color:#f92672">,</span> value<span style="color:#f92672">);</span>
+            <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+                <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> binCount <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span> <span style="color:#f92672">;</span> <span style="color:#f92672">++</span>binCount<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                    <span style="color:#75715e">//如果都没有key相等的,则添加在链表末尾
+</span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">if</span> <span style="color:#f92672">((</span>e <span style="color:#f92672">=</span> p<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span><span style="color:#f92672">)</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                        p<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> newNode<span style="color:#f92672">(</span>hash<span style="color:#f92672">,</span> key<span style="color:#f92672">,</span> value<span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>
+                        <span style="color:#75715e">//如果超过7个了,则转成红黑树,也就是说第8个触发
+</span><span style="color:#75715e"></span>                        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>binCount <span style="color:#f92672">&gt;=</span> TREEIFY_THRESHOLD <span style="color:#f92672">-</span> 1<span style="color:#f92672">)</span> <span style="color:#75715e">// -1 for 1st
+</span><span style="color:#75715e"></span>                            treeifyBin<span style="color:#f92672">(</span>tab<span style="color:#f92672">,</span> hash<span style="color:#f92672">);</span>
+                        <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+                    <span style="color:#f92672">}</span>
+                    <span style="color:#75715e">//如果中途碰到了已存在的值,则退出准备进行赋值
+</span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e<span style="color:#f92672">.</span><span style="color:#a6e22e">hash</span> <span style="color:#f92672">==</span> hash <span style="color:#f92672">&amp;&amp;</span>
+                        <span style="color:#f92672">((</span>k <span style="color:#f92672">=</span> e<span style="color:#f92672">.</span><span style="color:#a6e22e">key</span><span style="color:#f92672">)</span> <span style="color:#f92672">==</span> key <span style="color:#f92672">||</span> <span style="color:#f92672">(</span>key <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> key<span style="color:#f92672">.</span><span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span>k<span style="color:#f92672">))))</span>
+                        <span style="color:#66d9ef">break</span><span style="color:#f92672">;</span>
+                    p <span style="color:#f92672">=</span> e<span style="color:#f92672">;</span>
+                <span style="color:#f92672">}</span>
+            <span style="color:#f92672">}</span>
+            <span style="color:#75715e">//赋值操作
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span> <span style="color:#75715e">// existing mapping for key
+</span><span style="color:#75715e"></span>                V oldValue <span style="color:#f92672">=</span> e<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span><span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span>onlyIfAbsent <span style="color:#f92672">||</span> oldValue <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+                    e<span style="color:#f92672">.</span><span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> value<span style="color:#f92672">;</span>
+                afterNodeAccess<span style="color:#f92672">(</span>e<span style="color:#f92672">);</span>
+                <span style="color:#66d9ef">return</span> oldValue<span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#f92672">++</span>modCount<span style="color:#f92672">;</span>
+        <span style="color:#75715e">//如果超过了负载因子,需要扩充
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(++</span>size <span style="color:#f92672">&gt;</span> threshold<span style="color:#f92672">)</span>
+            resize<span style="color:#f92672">();</span>
+        afterNodeInsertion<span style="color:#f92672">(</span>evict<span style="color:#f92672">);</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">final</span> Node<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;[]</span> <span style="color:#a6e22e">resize</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+        Node<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;[]</span> oldTab <span style="color:#f92672">=</span> table<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">int</span> oldCap <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>oldTab <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">?</span> 0 <span style="color:#f92672">:</span> oldTab<span style="color:#f92672">.</span><span style="color:#a6e22e">length</span><span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">int</span> oldThr <span style="color:#f92672">=</span> threshold<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">int</span> newCap<span style="color:#f92672">,</span> newThr <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>oldCap <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#75715e">//已经超过最大容量了 1&lt;&lt;&lt;30
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>oldCap <span style="color:#f92672">&gt;=</span> MAXIMUM_CAPACITY<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                threshold <span style="color:#f92672">=</span> Integer<span style="color:#f92672">.</span><span style="color:#a6e22e">MAX_VALUE</span><span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">return</span> oldTab<span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span>
+            <span style="color:#75715e">//扩充为两倍
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">((</span>newCap <span style="color:#f92672">=</span> oldCap <span style="color:#f92672">&lt;&lt;</span> 1<span style="color:#f92672">)</span> <span style="color:#f92672">&lt;</span> MAXIMUM_CAPACITY <span style="color:#f92672">&amp;&amp;</span>
+                     oldCap <span style="color:#f92672">&gt;=</span> DEFAULT_INITIAL_CAPACITY<span style="color:#f92672">)</span>
+                newThr <span style="color:#f92672">=</span> oldThr <span style="color:#f92672">&lt;&lt;</span> 1<span style="color:#f92672">;</span> <span style="color:#75715e">// double threshold
+</span><span style="color:#75715e"></span>        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>oldThr <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> <span style="color:#75715e">// initial capacity was placed in threshold
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//oldCap == 0 带了容量来初始化,但没有分配过空间 .
+</span><span style="color:#75715e"></span>            newCap <span style="color:#f92672">=</span> oldThr<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>               <span style="color:#75715e">// zero initial threshold signifies using defaults
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//oldCap == 0 带了容量来初始化,但没有分配过空间 .
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">//初始化为16大小
+</span><span style="color:#75715e"></span>            newCap <span style="color:#f92672">=</span> DEFAULT_INITIAL_CAPACITY<span style="color:#f92672">;</span>
+            newThr <span style="color:#f92672">=</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span><span style="color:#f92672">)(</span>DEFAULT_LOAD_FACTOR <span style="color:#f92672">*</span> DEFAULT_INITIAL_CAPACITY<span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#75715e">//oldCap == 0 带了容量来初始化,但没有分配过空间 .
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>newThr <span style="color:#f92672">==</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">float</span> ft <span style="color:#f92672">=</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">float</span><span style="color:#f92672">)</span>newCap <span style="color:#f92672">*</span> loadFactor<span style="color:#f92672">;</span>
+            <span style="color:#75715e">//计算新threshold
+</span><span style="color:#75715e"></span>            newThr <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>newCap <span style="color:#f92672">&lt;</span> MAXIMUM_CAPACITY <span style="color:#f92672">&amp;&amp;</span> ft <span style="color:#f92672">&lt;</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">float</span><span style="color:#f92672">)</span>MAXIMUM_CAPACITY <span style="color:#f92672">?</span>
+                      <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span><span style="color:#f92672">)</span>ft <span style="color:#f92672">:</span> Integer<span style="color:#f92672">.</span><span style="color:#a6e22e">MAX_VALUE</span><span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span>
+        threshold <span style="color:#f92672">=</span> newThr<span style="color:#f92672">;</span>
+        <span style="color:#a6e22e">@SuppressWarnings</span><span style="color:#f92672">({</span><span style="color:#e6db74">&#34;rawtypes&#34;</span><span style="color:#f92672">,</span><span style="color:#e6db74">&#34;unchecked&#34;</span><span style="color:#f92672">})</span>
+        Node<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;[]</span> newTab <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>Node<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;[])</span><span style="color:#66d9ef">new</span> Node<span style="color:#f92672">[</span>newCap<span style="color:#f92672">];</span>
+        <span style="color:#75715e">//新容量准备迁移
+</span><span style="color:#75715e"></span>        table <span style="color:#f92672">=</span> newTab<span style="color:#f92672">;</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>oldTab <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+            <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> j <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span> j <span style="color:#f92672">&lt;</span> oldCap<span style="color:#f92672">;</span> <span style="color:#f92672">++</span>j<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                Node<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;</span> e<span style="color:#f92672">;</span>
+                <span style="color:#66d9ef">if</span> <span style="color:#f92672">((</span>e <span style="color:#f92672">=</span> oldTab<span style="color:#f92672">[</span>j<span style="color:#f92672">])</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                    oldTab<span style="color:#f92672">[</span>j<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+                    <span style="color:#75715e">//链表头
+</span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+                        newTab<span style="color:#f92672">[</span>e<span style="color:#f92672">.</span><span style="color:#a6e22e">hash</span> <span style="color:#f92672">&amp;</span> <span style="color:#f92672">(</span>newCap <span style="color:#f92672">-</span> 1<span style="color:#f92672">)]</span> <span style="color:#f92672">=</span> e<span style="color:#f92672">;</span>
+                    <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>e <span style="color:#66d9ef">instanceof</span> TreeNode<span style="color:#f92672">)</span>
+                        <span style="color:#75715e">//如果是树的话,交由红黑树处理
+</span><span style="color:#75715e"></span>                        <span style="color:#f92672">((</span>TreeNode<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;)</span>e<span style="color:#f92672">).</span><span style="color:#a6e22e">split</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">,</span> newTab<span style="color:#f92672">,</span> j<span style="color:#f92672">,</span> oldCap<span style="color:#f92672">);</span>
+                    <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span> <span style="color:#75715e">// preserve order
+</span><span style="color:#75715e"></span>                        Node<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;</span> loHead <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> loTail <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+                        Node<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;</span> hiHead <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> hiTail <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+                        Node<span style="color:#f92672">&lt;</span>K<span style="color:#f92672">,</span>V<span style="color:#f92672">&gt;</span> next<span style="color:#f92672">;</span>
+                        <span style="color:#66d9ef">do</span> <span style="color:#f92672">{</span>
+                            <span style="color:#75715e">//拆成两个链表
+</span><span style="color:#75715e"></span>                            next <span style="color:#f92672">=</span> e<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span><span style="color:#f92672">;</span>
+                            <span style="color:#75715e">//oldCap二进制下是100...对于任何hash,该位上为0的概率为50%,并且依然是下次hash后的所在的位置
+</span><span style="color:#75715e"></span>                            <span style="color:#75715e">//保留在原地
+</span><span style="color:#75715e"></span>                            <span style="color:#66d9ef">if</span> <span style="color:#f92672">((</span>e<span style="color:#f92672">.</span><span style="color:#a6e22e">hash</span> <span style="color:#f92672">&amp;</span> oldCap<span style="color:#f92672">)</span> <span style="color:#f92672">==</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>loTail <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+                                    loHead <span style="color:#f92672">=</span> e<span style="color:#f92672">;</span>
+                                <span style="color:#66d9ef">else</span>
+                                    loTail<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> e<span style="color:#f92672">;</span>
+                                loTail <span style="color:#f92672">=</span> e<span style="color:#f92672">;</span>
+                            <span style="color:#f92672">}</span>
+                            <span style="color:#75715e">//迁移到高位
+</span><span style="color:#75715e"></span>                            <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+                                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>hiTail <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+                                    hiHead <span style="color:#f92672">=</span> e<span style="color:#f92672">;</span>
+                                <span style="color:#66d9ef">else</span>
+                                    hiTail<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> e<span style="color:#f92672">;</span>
+                                hiTail <span style="color:#f92672">=</span> e<span style="color:#f92672">;</span>
+                            <span style="color:#f92672">}</span>
+                        <span style="color:#f92672">}</span> <span style="color:#66d9ef">while</span> <span style="color:#f92672">((</span>e <span style="color:#f92672">=</span> next<span style="color:#f92672">)</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>
+                        <span style="color:#75715e">//固定两个链表
+</span><span style="color:#75715e"></span>                        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>loTail <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                            loTail<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+                            newTab<span style="color:#f92672">[</span>j<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> loHead<span style="color:#f92672">;</span>
+                        <span style="color:#f92672">}</span>
+                        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>hiTail <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+                            hiTail<span style="color:#f92672">.</span><span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+                            newTab<span style="color:#f92672">[</span>j <span style="color:#f92672">+</span> oldCap<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> hiHead<span style="color:#f92672">;</span>
+                        <span style="color:#f92672">}</span>
+                    <span style="color:#f92672">}</span>
+                <span style="color:#f92672">}</span>
+            <span style="color:#f92672">}</span>
+        <span style="color:#f92672">}</span>
+        <span style="color:#66d9ef">return</span> newTab<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+
+</code></pre></div>
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+        
+    <span class="separator"><a class="tag" href="/tags/java/">java</a><a class="tag" href="/tags/data-structure/">data-structure</a></span>
+
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-appear.min.js"></script></html></body>
+
+</html>

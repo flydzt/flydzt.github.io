@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>mysql on FLYDZT</title>
+    <link>https://flydzt.github.io/tags/mysql/</link>
+    <description>Recent content in mysql on FLYDZT</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 11 Apr 2020 11:49:20 +0000</lastBuildDate>
+    
+	<atom:link href="https://flydzt.github.io/tags/mysql/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>记一次mysql自增主键用完</title>
+      <link>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1mysql%E8%87%AA%E5%A2%9E%E4%B8%BB%E9%94%AE%E7%94%A8%E5%AE%8C/</link>
+      <pubDate>Sat, 11 Apr 2020 11:49:20 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1mysql%E8%87%AA%E5%A2%9E%E4%B8%BB%E9%94%AE%E7%94%A8%E5%AE%8C/</guid>
+      <description>场景 海外业务接入了多家网盟,网盟会定期push广告过来,供我们去播放.
+现象 日志报错,大量的主键重复错误.且id为int的最大值.
+分析 业务设计时,没有考虑网盟会推送巨量的广告过来,当初刚上线,每次推送只有两位数的广告,主键只用了int.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> flydzt | netty 组件简介 </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.70.0" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="解决一类问题而不是一个问题">
+    <link rel="stylesheet" href="https://flydzt.github.io/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="https://flydzt.github.io">
+    
+    <link rel="shortcut icon" href="https://flydzt.github.io/images/hhh.jpgfavicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://flydzt.github.io/images/hhh.jpgapple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://flydzt.github.io/images/hhh.jpgfavicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://flydzt.github.io/images/hhh.jpgfavicon-16x16.png">
+
+    <link rel="canonical" href="https://flydzt.github.io/post/netty%E7%BB%84%E4%BB%B6%E7%AE%80%E4%BB%8B/">
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="https://flydzt.github.io/images/hhh.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">FLYDZT</a></h3>
+        <div class="description">
+          <p>解决一类问题而不是一个问题</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://github.com/flydzt" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; flydzt 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/" title="">Home</a></li>
+
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>netty 组件简介
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Sat, Mar 21, 2020</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">1-minute read</span>
+        </div>
+        
+        </div>
+
+    <h2 id="todo">TODO</h2>
+<h2 id="channel">Channel</h2>
+<p>对应socket</p>
+<h3 id="生命周期">生命周期</h3>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>channelUnregistered</td>
+<td>已创建未注册</td>
+</tr>
+<tr>
+<td>channelRegistered</td>
+<td>注册到EventLoop</td>
+</tr>
+<tr>
+<td>channelActive</td>
+<td>连接到远程主机 准备收发数据</td>
+</tr>
+<tr>
+<td>channelInactive</td>
+<td>未连接到远程主机</td>
+</tr>
+</tbody>
+</table>
+<p>在状态发生变化时,能通知到pipeline,从而使handler能处理这些事件</p>
+<h2 id="channelhandler">ChannelHandler</h2>
+<p>处理节点</p>
+<p>ChannelInboundHandler</p>
+<p>ChannelOutboundHanlder</p>
+<h3 id="生命周期-1">生命周期</h3>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>handlerAdded</td>
+<td>添加到pipeline</td>
+</tr>
+<tr>
+<td>handlerRemoved</td>
+<td>从pipeline移除</td>
+</tr>
+<tr>
+<td>exceptionCaught</td>
+<td>抛出异常</td>
+</tr>
+</tbody>
+</table>
+<h2 id="channelpipeline">ChannelPipeline</h2>
+<p>handler串联为pipeline,ChannelHanlderContext是handler和pipeline的绑定</p>
+<h2 id="eventloop">EventLoop</h2>
+<p>Channel会被分配到一个EventLoop中,一个EventLoop对应一个线程.</p>
+<p>EventLoop会不停轮训,找到可读写的Channel,以及需要执行的任务.</p>
+
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+        
+    <span class="separator"><a class="tag" href="/tags/java/">java</a><a class="tag" href="/tags/netty/">netty</a><a class="tag" href="/tags/io/">io</a></span>
+
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-appear.min.js"></script></html></body>
+
+</html>

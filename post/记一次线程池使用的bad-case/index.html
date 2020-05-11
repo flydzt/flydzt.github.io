@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> flydzt | 记一次线程池使用的bad_case </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.70.0" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="解决一类问题而不是一个问题">
+    <link rel="stylesheet" href="https://flydzt.github.io/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="https://flydzt.github.io">
+    
+    <link rel="shortcut icon" href="https://flydzt.github.io/images/hhh.jpgfavicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://flydzt.github.io/images/hhh.jpgapple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://flydzt.github.io/images/hhh.jpgfavicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://flydzt.github.io/images/hhh.jpgfavicon-16x16.png">
+
+    <link rel="canonical" href="https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%BD%BF%E7%94%A8%E7%9A%84bad-case/">
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="https://flydzt.github.io/images/hhh.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">FLYDZT</a></h3>
+        <div class="description">
+          <p>解决一类问题而不是一个问题</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://github.com/flydzt" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; flydzt 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/" title="">Home</a></li>
+
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>记一次线程池使用的bad_case
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Thu, Apr 2, 2020</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">1-minute read</span>
+        </div>
+        
+        </div>
+
+    <h2 id="需求">需求</h2>
+<p>一个数据上报服务,本地会进行一些预处理.为了减轻下游服务的压力,使用了core:1 max:1的线程池来对请求进行排队.由于数据量慢慢增长,单线程上报跟不上速度.发现产生reject(reject会落本地文件).</p>
+<h2 id="改造">改造</h2>
+<p>下游服务改造后,可以增大并发程度.于是改为core:1 max:8并免测上线.上线后根据上报数量曲线发现,抖动非常厉害.也就是说一会儿上报很多,一会儿又上报很少,往复循环.</p>
+<h2 id="问题">问题</h2>
+<p>发现是由于KeepAliveTime的值原本只设置了100ms,由于原来只有1个线程,所以没有问题.而增大了max设置后,由于粗心没有看到KeepAliveTime的单位是毫秒.</p>
+<p>在线上由于数据量的不稳定性,会发生大量的线程创建和销毁.</p>
+<h2 id="总结">总结</h2>
+<p>如果在持续稳定的压力上,最终线程池能保持一个平衡,此时任务不会排队,如果突发的增加了压力,则需要进行排队,如果压力过大,reject策略需要安全且快速.例如落本地文件,追加操作是非常快的.</p>
+<p>线程池的参数,要根据实际情况来设置.且不能混用线程池.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">        <span style="color:#66d9ef">new</span> ThreadPoolExecutor<span style="color:#f92672">(</span>
+                <span style="color:#75715e">//core 1 max 8
+</span><span style="color:#75715e"></span>                1<span style="color:#f92672">,</span> 8<span style="color:#f92672">,</span>
+                100<span style="color:#f92672">,</span> TimeUnit<span style="color:#f92672">.</span><span style="color:#a6e22e">SECONDS</span><span style="color:#f92672">,</span>
+                <span style="color:#66d9ef">new</span> ArrayBlockingQueue<span style="color:#f92672">&lt;&gt;(</span>1000<span style="color:#f92672">),</span>
+                <span style="color:#66d9ef">new</span> ThreadFactoryBuilder<span style="color:#f92672">().</span><span style="color:#a6e22e">setNameFormat</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;xxx-%d&#34;</span><span style="color:#f92672">).</span><span style="color:#a6e22e">build</span><span style="color:#f92672">(),</span>
+                <span style="color:#f92672">(</span>r<span style="color:#f92672">,</span> executor<span style="color:#f92672">)</span> <span style="color:#f92672">-&gt;</span> <span style="color:#f92672">{</span>
+                    <span style="color:#75715e">//reject处理
+</span><span style="color:#75715e"></span>                <span style="color:#f92672">});</span>
+
+</code></pre></div><h2 id="blockingqueue">BlockingQueue</h2>
+<p>ArrayBlockingQueue实现为一个数组,两个指针来代表入(putIndex)和出(takeIndex).到达尾部,会重新设置到头部.takeIndex不能超过putIndex.所以ArrayBlockQueue是必须要指定容量的.</p>
+<p>为了线程安全,在操作前都需要lock.在阻塞操作时await().被signal()唤醒再次判断是否非空.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">    <span style="color:#66d9ef">public</span> E <span style="color:#a6e22e">takeFirst</span><span style="color:#f92672">()</span> <span style="color:#66d9ef">throws</span> InterruptedException <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">final</span> ReentrantLock lock <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">lock</span><span style="color:#f92672">;</span>
+        lock<span style="color:#f92672">.</span><span style="color:#a6e22e">lock</span><span style="color:#f92672">();</span>
+        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+            E x<span style="color:#f92672">;</span>
+            <span style="color:#75715e">//使用while 防止醒了发现还是空的
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">while</span> <span style="color:#f92672">(</span> <span style="color:#f92672">(</span>x <span style="color:#f92672">=</span> unlinkFirst<span style="color:#f92672">())</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+                notEmpty<span style="color:#f92672">.</span><span style="color:#a6e22e">await</span><span style="color:#f92672">();</span>
+            <span style="color:#66d9ef">return</span> x<span style="color:#f92672">;</span>
+        <span style="color:#f92672">}</span> <span style="color:#66d9ef">finally</span> <span style="color:#f92672">{</span>
+            lock<span style="color:#f92672">.</span><span style="color:#a6e22e">unlock</span><span style="color:#f92672">();</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+
+</code></pre></div><p>LinkedBlockingQueue则不必须指定容量,因为链表的性质,可以任意扩容和缩容,可以到达无限长的队列(不推荐). 使用count和capacity来判断队列是否已满.</p>
+
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+        
+    <span class="separator"><a class="tag" href="/tags/java/">java</a><a class="tag" href="/tags/thread/">thread</a></span>
+
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-appear.min.js"></script></html></body>
+
+</html>

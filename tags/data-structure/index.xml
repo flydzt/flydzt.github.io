@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>data-structure on FLYDZT</title>
+    <link>https://flydzt.github.io/tags/data-structure/</link>
+    <description>Recent content in data-structure on FLYDZT</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 01 Apr 2020 21:03:16 +0000</lastBuildDate>
+    
+	<atom:link href="https://flydzt.github.io/tags/data-structure/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>java常用数据结构</title>
+      <link>https://flydzt.github.io/post/java%E5%B8%B8%E7%94%A8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</link>
+      <pubDate>Wed, 01 Apr 2020 21:03:16 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/java%E5%B8%B8%E7%94%A8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</guid>
+      <description>特点 初始化容量 不传入容量的初始化,一般只设置一个容量/负载因子(或者什么都不做),不会去分配空间.例如:
+public ArrayList() { //空列表 复用对象,只有容量发生变化的时候才分配.</description>
+    </item>
+    
+  </channel>
+</rss>

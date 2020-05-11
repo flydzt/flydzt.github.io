@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>redis on FLYDZT</title>
+    <link>https://flydzt.github.io/tags/redis/</link>
+    <description>Recent content in redis on FLYDZT</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 25 Apr 2020 14:06:09 +0000</lastBuildDate>
+    
+	<atom:link href="https://flydzt.github.io/tags/redis/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>记一次redis全局锁的问题</title>
+      <link>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1redis%E5%85%A8%E5%B1%80%E9%94%81%E7%9A%84%E9%97%AE%E9%A2%98/</link>
+      <pubDate>Sat, 25 Apr 2020 14:06:09 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1redis%E5%85%A8%E5%B1%80%E9%94%81%E7%9A%84%E9%97%AE%E9%A2%98/</guid>
+      <description>背景 在一个刷新数据的任务里,防止多个节点同时开始任务浪费资源,使用redis作为全局锁.
+多个节点使用set nx lock来获取锁,没有获取到将退出,等待下一次调度.任务结束后将锁del.</description>
+    </item>
+    
+    <item>
+      <title>redis的一些基础知识</title>
+      <link>https://flydzt.github.io/post/redis%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Sun, 29 Mar 2020 14:42:18 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/redis%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</guid>
+      <description>redis命令一览,未列举特别常用的    命令 功能     dbsize key数量   type key种类   object encoding 编码(实现)   hscan/zscan/sscan 结构中的scan   pfadd/pfcount/pfmerge 0.</description>
+    </item>
+    
+  </channel>
+</rss>

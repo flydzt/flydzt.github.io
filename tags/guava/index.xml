@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>guava on FLYDZT</title>
+    <link>https://flydzt.github.io/tags/guava/</link>
+    <description>Recent content in guava on FLYDZT</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 29 Mar 2020 01:32:47 +0000</lastBuildDate>
+    
+	<atom:link href="https://flydzt.github.io/tags/guava/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>记一次guava_cache的使用问题</title>
+      <link>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1guava_cache%E7%9A%84%E4%BD%BF%E7%94%A8%E9%97%AE%E9%A2%98/</link>
+      <pubDate>Sun, 29 Mar 2020 01:32:47 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1guava_cache%E7%9A%84%E4%BD%BF%E7%94%A8%E9%97%AE%E9%A2%98/</guid>
+      <description>背景 给其他业务提供了一个jar包.
+内部有一些比较重的逻辑,并且依赖实时数据.
+我们提供了http接口可以获取数据.为了减少耗时,使用guava_cache来做为缓存.
+key是多维度拼接的一个值,value为4对kv的map.</description>
+    </item>
+    
+  </channel>
+</rss>

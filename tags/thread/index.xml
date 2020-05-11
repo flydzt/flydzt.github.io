@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>thread on FLYDZT</title>
+    <link>https://flydzt.github.io/tags/thread/</link>
+    <description>Recent content in thread on FLYDZT</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 19 Apr 2020 03:32:28 +0000</lastBuildDate>
+    
+	<atom:link href="https://flydzt.github.io/tags/thread/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>jvm线程模型的一些基础知识</title>
+      <link>https://flydzt.github.io/post/jvm%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Sun, 19 Apr 2020 03:32:28 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/jvm%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</guid>
+      <description>进程和线程 进程是资源的集合,线程是执行的实体.
+进程由fork系统调用创建,形成层次结构,通常新建进程马上会执行新的命令,所以有copy-on-write的优化.
+线程则由pthread_create创建,共享进程内的资源.程序计数器和栈是独立的.程序计数器表明当前执行到哪里,栈则是执行的历史.
+用户线程和内核线程 操作系统的线程概念可以实现在用户空间或者内核空间,也可以是混合的.</description>
+    </item>
+    
+    <item>
+      <title>juc的一些基础知识</title>
+      <link>https://flydzt.github.io/post/juc%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Sat, 04 Apr 2020 14:59:08 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/juc%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</guid>
+      <description>java.util.concurrent java 1.5提供了juc包,实现了常用的工具类.包括线程池,异步IO,轻量级任务框架等.
+volatile volatile关键字保证各线程间对于同一个变量,总是能看到最新值.是一种稍弱的同步机制.对于volatile变量,编译器和运行时不会进行重排序,并且不会被缓存在寄存器或者对其他处理器不可见的地方.</description>
+    </item>
+    
+    <item>
+      <title>记一次线程池使用的bad_case</title>
+      <link>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%BD%BF%E7%94%A8%E7%9A%84bad-case/</link>
+      <pubDate>Thu, 02 Apr 2020 22:26:48 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%BD%BF%E7%94%A8%E7%9A%84bad-case/</guid>
+      <description>需求 一个数据上报服务,本地会进行一些预处理.为了减轻下游服务的压力,使用了core:1 max:1的线程池来对请求进行排队.由于数据量慢慢增长,单线程上报跟不上速度.发现产生reject(reject会落本地文件).
+改造 下游服务改造后,可以增大并发程度.于是改为core:1 max:8并免测上线.</description>
+    </item>
+    
+  </channel>
+</rss>

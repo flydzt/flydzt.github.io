@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ip on FLYDZT</title>
+    <link>https://flydzt.github.io/tags/ip/</link>
+    <description>Recent content in ip on FLYDZT</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 27 Mar 2020 23:37:40 +0000</lastBuildDate>
+    
+	<atom:link href="https://flydzt.github.io/tags/ip/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>tcp_ip的一些基础知识</title>
+      <link>https://flydzt.github.io/post/tcp_ip%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Fri, 27 Mar 2020 23:37:40 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/tcp_ip%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</guid>
+      <description>链路层 匹配MAC地址(可以广播)
+网络层 IP    版本 首部长度 服务类型 总长度 标识 标志 片偏移 生存时间 协议 校验和 源IP 目的地IP 选项     4 4 8 16 16 3 13 8 8 16 32 32     传输层 UDP    源端口号 目标端口号 长度 校验和     16 16 16 16    TCP 面向连接,可靠的,基于字节流的通信协议</description>
+    </item>
+    
+  </channel>
+</rss>

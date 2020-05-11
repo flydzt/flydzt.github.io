@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>os on FLYDZT</title>
+    <link>https://flydzt.github.io/tags/os/</link>
+    <description>Recent content in os on FLYDZT</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 19 Apr 2020 03:32:28 +0000</lastBuildDate>
+    
+	<atom:link href="https://flydzt.github.io/tags/os/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>jvm线程模型的一些基础知识</title>
+      <link>https://flydzt.github.io/post/jvm%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</link>
+      <pubDate>Sun, 19 Apr 2020 03:32:28 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/jvm%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</guid>
+      <description>进程和线程 进程是资源的集合,线程是执行的实体.
+进程由fork系统调用创建,形成层次结构,通常新建进程马上会执行新的命令,所以有copy-on-write的优化.
+线程则由pthread_create创建,共享进程内的资源.程序计数器和栈是独立的.程序计数器表明当前执行到哪里,栈则是执行的历史.
+用户线程和内核线程 操作系统的线程概念可以实现在用户空间或者内核空间,也可以是混合的.</description>
+    </item>
+    
+  </channel>
+</rss>

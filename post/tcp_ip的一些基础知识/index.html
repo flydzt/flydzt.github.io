@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> flydzt | tcp_ip的一些基础知识 </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.70.0" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="解决一类问题而不是一个问题">
+    <link rel="stylesheet" href="https://flydzt.github.io/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="https://flydzt.github.io">
+    
+    <link rel="shortcut icon" href="https://flydzt.github.io/images/hhh.jpgfavicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://flydzt.github.io/images/hhh.jpgapple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://flydzt.github.io/images/hhh.jpgfavicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://flydzt.github.io/images/hhh.jpgfavicon-16x16.png">
+
+    <link rel="canonical" href="https://flydzt.github.io/post/tcp_ip%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/">
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="https://flydzt.github.io/images/hhh.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">FLYDZT</a></h3>
+        <div class="description">
+          <p>解决一类问题而不是一个问题</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://github.com/flydzt" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; flydzt 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/" title="">Home</a></li>
+
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>tcp_ip的一些基础知识
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Fri, Mar 27, 2020</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">2-minute read</span>
+        </div>
+        
+        </div>
+
+    <h2 id="链路层">链路层</h2>
+<p>匹配MAC地址(可以广播)</p>
+<h2 id="网络层">网络层</h2>
+<h3 id="ip">IP</h3>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>首部长度</th>
+<th>服务类型</th>
+<th>总长度</th>
+<th>标识</th>
+<th>标志</th>
+<th>片偏移</th>
+<th>生存时间</th>
+<th>协议</th>
+<th>校验和</th>
+<th>源IP</th>
+<th>目的地IP</th>
+<th>选项</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4</td>
+<td>4</td>
+<td>8</td>
+<td>16</td>
+<td>16</td>
+<td>3</td>
+<td>13</td>
+<td>8</td>
+<td>8</td>
+<td>16</td>
+<td>32</td>
+<td>32</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="传输层">传输层</h2>
+<h3 id="udp">UDP</h3>
+<table>
+<thead>
+<tr>
+<th>源端口号</th>
+<th>目标端口号</th>
+<th>长度</th>
+<th>校验和</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16</td>
+<td>16</td>
+<td>16</td>
+<td>16</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tcp">TCP</h3>
+<p>面向连接,可靠的,基于字节流的通信协议</p>
+<table>
+<thead>
+<tr>
+<th>MAC 头</th>
+<th>IP头</th>
+<th>TCP头</th>
+<th>TCP内容</th>
+<th>MAC尾</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>14</td>
+<td>20</td>
+<td>20</td>
+<td></td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<p>如果IP被分段就没有TCP头,网卡会处理IP协议层,所以在TCP/UDP层看来,报文是连续的</p>
+<p>但需要注意,如果一个TCP报文过长,在IP层会被分片,超时重传时需要重传整个报文,建议TCP报文长度不要超过MSS</p>
+<p>TCP/UDP报文最长长度不能超过IP头的最长长度,即2^16=65536</p>
+<table>
+<thead>
+<tr>
+<th>源端口号</th>
+<th>目标端口号</th>
+<th>序号</th>
+<th>确认序号</th>
+<th>首部长度</th>
+<th>保留</th>
+<th>标志位</th>
+<th>窗口大小</th>
+<th>校验和</th>
+<th>紧急偏移</th>
+<th>选项</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16</td>
+<td>16</td>
+<td>32</td>
+<td>32</td>
+<td>4</td>
+<td>6</td>
+<td>6</td>
+<td>16</td>
+<td>16</td>
+<td>16</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>和udp不同,TCP协议头部没有长度字段,因为报文长度可以根据IP头来计算,udp的长度字段其实也可以省略.</p>
+<h4 id="三次握手">三次握手</h4>
+<h4 id="为什么需要三次握手">为什么需要三次握手</h4>
+<p>客户端和服务端都需要知道</p>
+<ol>
+<li>客户端到服务端是通的</li>
+<li>服务端到客户端是通的</li>
+</ol>
+<ul>
+<li>客户端发起握手,服务端收到,此时服务端知道1</li>
+<li>服务端响应,客户端收到,此时客户端知道1/2</li>
+<li>客户端响应(此时客户端认为链路是通的,可以捎带数据),服务端收到,此时服务端知道1/2</li>
+</ul>
+<p>如果没有第三步,则服务端只需要收到握手,就建立连接,会产生问题.</p>
+<p>例如客户端重复发送的握手信号 但又马上下线</p>
+<p>如果两边同时发起握手,会和四次挥手非常类似,变为四次握手</p>
+<h4 id="握手超时">握手超时</h4>
+<p>服务端收到握手并响应后,未收到客户端响应.</p>
+<p>服务端至多尝试5次,每次间隔为1/2/4/8/16/32s</p>
+<h4 id="ack确认机制">ack确认机制</h4>
+<p>如果数据完整正确接收,返回一个ack号,表示此前的数据被接收</p>
+<p>例如发送1,2,3,4,5,6 可以回复1,2,2,2,2,6</p>
+<h4 id="nagle算法cork算法延迟确认">Nagle算法/CORK算法/延迟确认</h4>
+<p>nagle算法要求一个TCP连接上最多只能有一个未被确认的未完成的小分组,该分组的确认达到之前不能发送其他的小分组</p>
+<p>即每一个报文都需要被ack了,才能发送下一个.</p>
+<p>这个算法是自适应的,网络越好,发送越快,网络越慢,积累越多.</p>
+<p>它改善了网络中小包的数量,避免拥塞.但在网络很好的情况下,网络中依然可能存在大量的小包.</p>
+<p>TCP_NO_DELAY可以关闭Nagle算法.</p>
+<p>对延迟敏感的rpc需要该算法的,例如dubbo就是关闭的.</p>
+<p>小包由于有效信息比低,可以合并小包发送来提高网络利用率,即CORK算法.它会尽量合并小包去发送.</p>
+<p>Nagle算法是ack触发的,CORK算法不受ack影响,靠累积小包或者等足够的时间.</p>
+<p>单纯发送ack很浪费,可以采用延迟确认积累数据再发送,在和Nagle算法配合时,会增加延迟,因为Nagle靠对方的ack来触发.</p>
+<h4 id="滑动窗口">滑动窗口</h4>
+<p>滑动窗口是为了保证每个发送的报文对方总是能接收.不出现由于缓冲区不够而丢弃的情况.</p>
+<p>需要记录下对方能接收的数据大小,这个值会改变.</p>
+<p>处理指针向右:数据发送和确认的时候,窗口合拢,对方收到这部分数据,就不必保存了</p>
+<p>能发送的容量变大:窗口张开,对方ack时以及对方能接收的窗口变大时,可以向右张开窗口</p>
+<p>窗口大小可以为0,这时候就不能给对方发送数据.对方等到可以继续接收数据时再发送一个重复ack,这个ack里的窗口大小会被设值</p>
+<p>能发送的容量变小:窗口收缩,尽量不要这样做.</p>
+<p>如果窗口一直很小,说明处理速度很慢,被称为糊涂窗口综合征</p>
+<h4 id="慢启动">慢启动</h4>
+<p>慢启动是为了流量控制,如果发送速度过快,超出中间路由的处理容量,会丢包.</p>
+<p>拥塞窗口和通告窗口中取最小值作为发送上限.每次收到ack,拥塞窗口增加一个报文段的长度.</p>
+<p>从表现上,发送1个,并收到ack,拥塞窗口增长为2,发送2个收到两个ack,增长为4,发送4个收到4个ack,增长为8&hellip;</p>
+<p>如果发生了超时和重复ack,认为窗口开的过大.需要减少拥塞窗口的大小</p>
+<h4 id="超时重传">超时重传</h4>
+<p>没有等到对方的ack,认为对方没有收到对应的报文,重新发送该报文.</p>
+<p>如果此时,已经累计了好几条报文,可以一起发送(可能浪费带宽)</p>
+<h4 id="快速重传">快速重传</h4>
+<p>等到了对方的ack,但是对方的ack总是比自己已发送的少.</p>
+<p>需要重传对方的ack+1的报文,也可以一起发送后面的报文(可能浪费带宽,对方可能只是这一条报文没收到)</p>
+<h4 id="sack">sack</h4>
+<p>为了解决ack的局限性,加入了sack.不再返回单个ack值,也会返回ack后已接收的报文段</p>
+<p>例如返回ack 300, sack 350-400,450-500
+那么就知道是缺少了300-350,400-450</p>
+<p>发送方如果依赖sack来刷新缓冲区</p>
+<p>假设接收方350-400的报文因为内存不够而被丢弃,那么发送方将不能重传该部分报文</p>
+<p>发送方对sack只能是一个参考,必须依赖接收方的ack来刷新自己的发送缓冲区</p>
+<h4 id="四次挥手">四次挥手</h4>
+<h4 id="为什么需要四次挥手">为什么需要四次挥手</h4>
+<p>客户端和服务端都需要知道</p>
+<ol>
+<li>客户端没有信息要发了</li>
+<li>服务端没有信息要发了</li>
+</ol>
+<p>不失一般性:假设客户端发起挥手</p>
+<ul>
+<li>客户端没有信息要发了,发起挥手,进入半关闭,此时客户端知道1</li>
+<li>服务端响应,客户端收到响应,此时服务端知道1</li>
+<li>服务端发完信息,发起挥手,此时服务端知道1/2,进入关闭状态</li>
+<li>客户端响应,服务端收到响应,此时客户端知道1/2,进入关闭状态</li>
+</ul>
+<p>可能服务端同时也把消息发完了,则客户端和服务端同时发起挥手,同时进入半关闭,各自响应后,同时关闭</p>
+<p>挥手就是两边分别挥手和响应共计四次</p>
+<h4 id="挥手超时">挥手超时</h4>
+<p>挥手超时重发即可</p>
+<p>如果最后客户端的响应丢了,服务端是需要重发挥手的</p>
+<p>在最后依然保持一段时间的连接来保证顺利关闭,成为time-wait阶段</p>
+<h4 id="为什么需要time-wait">为什么需要time-wait</h4>
+<p>此时依然维护着连接(文件描述符未被释放),将等待2MSL(60s)</p>
+<p>网络包在网络中有一个生存时限,担心旧的信息(例如握手/挥手)被收到引起的异常.</p>
+<p>等待足够时间后,网络中将不再存在通信双方的信息,正式关闭连接</p>
+<h2 id="应用层">应用层</h2>
+<h3 id="http">Http</h3>
+<p>http是请求-响应式的协议,也就是在同一时刻,只能发起一个请求.因为协议里没有定义请求id.所以如果同时发起请求,乱序收到响应,是无法区分出来的.</p>
+<p>http1.1默认是支持keep-alive的,但是nginx里面如果配置了keep-alive为0.则依然每请求一次就会断开tcp连接.</p>
+<h4 id="http格式">http格式</h4>
+<p>http_URL</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&#34;http:&#34; &#34;//&#34; host [ &#34;:&#34; port ] [ abs_path [ &#34;?&#34; query ]]
+</code></pre></div><p>如果端口未给出,则假定为80.https为443.如果url过长,需要返回414</p>
+<p>HTTP消息由从客户到服务器的请求消息和从服务器到客户的响应消息两部分组成.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">generic-message = start-line
+*（message-header CRLF）
+CRLF
+[ message-body ]
+start-line = Request-Line | Status-Line
+Request-Line =Method SP Request-URL SP HTTP-Version CRLF
+Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+</code></pre></div><p>Method包括GET HEAD POST PUT DELETE TRACE CONNECT</p>
+<p>状态码包括:</p>
+<ul>
+<li>1xx ：报告的 -请求被接收到，继续处理</li>
+<li>2xx ：成功 - 被成功地接收（received）,理解（understood）,接受
+（accepted）的动作</li>
+<li>3xx ：重发 - 为了完成请求必须采取进一步的动作.</li>
+<li>4xx ：客户端出错 - 请求包括错的语法或不能被满足.</li>
+<li>5xx ：服务器出错 - 服务器无法完成显然有效的请求.</li>
+</ul>
+<h4 id="头部">头部</h4>
+<p>头部只能使用ascii字符,body能被编码.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">field-name &#34;:&#34; \[filed-value]
+</code></pre></div><p>value可以是空白的.相同的name可以按照顺序合并.</p>
+<p>charset丢失可以猜测body的编码,但是如果指定了,必须使用指定的.</p>
+<p>content-coding不能丢失媒体类型的特性,不能丢失文档的信息.也就意味着不能做有损的压缩.默认是identity,也就是不做任何处理.一般会使用压缩,例如gzip delate br.用cpu来换网络开销.</p>
+<h4 id="主体">主体</h4>
+<p>1xx,204,304等响应和请求HEAD的响应是不能带body的.body会被忽略.</p>
+<p>http/1.1带有body的请求必须包含content-length,否则返回400或者411(要求长度).如果消息包含非identity的编码,content-length必须被忽略.</p>
+<h4 id="https-握手">https 握手</h4>
+<ul>
+<li>客户端发起请求,并告知期望的加密套件</li>
+<li>服务端返回证书,该证书由专业机构颁发.由机构的私钥(rsa)加密.</li>
+<li>客户端解密证书,证书中可能包含对方的公钥(rsa).客户端用公钥加密磋商秘钥.</li>
+<li>服务端使用磋商秘钥加密一段信息</li>
+<li>客户端校验并确定服务端收到了正确的秘钥.</li>
+</ul>
+<p>rsa的工作方式为,公钥加密私钥解密,或者私钥加密公钥解密.根据目前的算力基本不能破解.</p>
+<p>aes的工作方式为,只有一个秘钥,但是通过双方的通信内容基本很难破解出秘钥.在需要篡改的场合,通信时间相对于破解时间来说微乎其微,破解基本不可能.如果是监听场合,则在事后无法保证.</p>
+<p>https可行的前提是,机构是可信的,私钥不能泄露且不能被推算.操作系统中一般都内置了这些机构的公钥.</p>
+<p>机构会给证书设置一个有效时长,也是为了安全考虑,及时更换秘钥对.</p>
+<p>中间人只能监听到证书,而无法正确的篡改证书,因为篡改证书就不能正常解密(签名摘要也无法校验通过).除非能拿到机构的私钥,才能正确构造证书.</p>
+<p>那么客户端就能拿到放在证书里的服务端的正确公钥(rsa).</p>
+<p>通过对方的公钥加密协商秘钥(通常为aes).中间人不知道网站的私钥,也就无法解密出协商秘钥.</p>
+<p>服务端接收到协商秘钥,返回确认,由此客户端和服务端双方都持有协商的秘钥,并且没有暴露出去,即可安全通信.</p>
+<p>https加密范围不仅包括body,也包括url的path.</p>
+
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+        
+    <span class="separator"><a class="tag" href="/tags/tcp/">tcp</a><a class="tag" href="/tags/ip/">ip</a></span>
+
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-appear.min.js"></script></html></body>
+
+</html>

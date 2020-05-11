@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>io on FLYDZT</title>
+    <link>https://flydzt.github.io/tags/io/</link>
+    <description>Recent content in io on FLYDZT</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 21 Mar 2020 10:12:24 +0000</lastBuildDate>
+    
+	<atom:link href="https://flydzt.github.io/tags/io/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>netty 组件简介</title>
+      <link>https://flydzt.github.io/post/netty%E7%BB%84%E4%BB%B6%E7%AE%80%E4%BB%8B/</link>
+      <pubDate>Sat, 21 Mar 2020 10:12:24 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/netty%E7%BB%84%E4%BB%B6%E7%AE%80%E4%BB%8B/</guid>
+      <description>TODO Channel 对应socket
+生命周期    状态 说明     channelUnregistered 已创建未注册   channelRegistered 注册到EventLoop   channelActive 连接到远程主机 准备收发数据   channelInactive 未连接到远程主机    在状态发生变化时,能通知到pipeline,从而使handler能处理这些事件</description>
+    </item>
+    
+    <item>
+      <title>dubbo的远程通信</title>
+      <link>https://flydzt.github.io/post/dubbo%E7%9A%84%E8%BF%9C%E7%A8%8B%E9%80%9A%E4%BF%A1/</link>
+      <pubDate>Sun, 29 Dec 2019 16:12:04 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/dubbo%E7%9A%84%E8%BF%9C%E7%A8%8B%E9%80%9A%E4%BF%A1/</guid>
+      <description>概览 应用程序的远程通信,无非是Server开一个端口去监听(listen, 例如用一个队列最多阻塞1024个客户端等待accept, 超过的直接拒绝).
+Client进行连接(connect)并拿到一个句柄,Server也拿到(accept, 从监听队列拿出)一个句柄.</description>
+    </item>
+    
+  </channel>
+</rss>

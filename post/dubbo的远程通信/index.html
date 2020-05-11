@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> flydzt | dubbo的远程通信 </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.70.0" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="解决一类问题而不是一个问题">
+    <link rel="stylesheet" href="https://flydzt.github.io/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="https://flydzt.github.io">
+    
+    <link rel="shortcut icon" href="https://flydzt.github.io/images/hhh.jpgfavicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://flydzt.github.io/images/hhh.jpgapple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://flydzt.github.io/images/hhh.jpgfavicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://flydzt.github.io/images/hhh.jpgfavicon-16x16.png">
+
+    <link rel="canonical" href="https://flydzt.github.io/post/dubbo%E7%9A%84%E8%BF%9C%E7%A8%8B%E9%80%9A%E4%BF%A1/">
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="https://flydzt.github.io/images/hhh.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">FLYDZT</a></h3>
+        <div class="description">
+          <p>解决一类问题而不是一个问题</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://github.com/flydzt" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; flydzt 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/" title="">Home</a></li>
+
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>dubbo的远程通信
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Sun, Dec 29, 2019</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">1-minute read</span>
+        </div>
+        
+        </div>
+
+    <h2 id="概览">概览</h2>
+<p>应用程序的远程通信,无非是Server开一个端口去监听(listen, 例如用一个队列最多阻塞1024个客户端等待accept, 超过的直接拒绝).</p>
+<p>Client进行连接(connect)并拿到一个句柄,Server也拿到(accept, 从监听队列拿出)一个句柄.依靠这两个句柄就可以进行全双工的读写(write,read).</p>
+<h3 id="tcp_no_delaykeep_alive">TCP_NO_DELAY/KEEP_ALIVE</h3>
+<p>在使用时,可以根据场景做一些优化.例如可以关闭nagle算法来降低延迟,但是增加了发包的次数.</p>
+<p>由于协议是分层的,在tcp层增加包的数量,同时需要传递链路层传输层重复的信息(本来可以在一个包里,为了减少延迟而拆开了),而应用的协议比tcp层更高,又进一步降低了一个包中信息的有效比例.</p>
+<p>在传输信息量少的时候更甚.虽然看着带宽占了很多,但是大多数数据是为了拆包和相应的ack而导致的,和业务无关. 简言之就是&quot;空间&rdquo;(信道容量)换&quot;时间&rdquo;(延迟).</p>
+<p>网络传输繁忙也意味着大量的中断,为提高效率可以合并发送.</p>
+<p>通常,业务的数据进入系统调用后(write调用成功只是进入缓冲区,write阻塞说明缓冲区已满.为重试需要,只有收到对方ack才会清理缓冲区内容)就认为发送成功了,但这部分数据可能还未真正发送,并且可能丢包(重试由系统保证). 由此可能会产生很多无意义的数据发送(服务端认为未超时,但是由于发送不及时或丢包重试,客户端认为超时了).</p>
+<p>KEEP_ALIVE则是定时去探测某个连接是否可用.dubbo的客户端是开启TCP_KEEP_ALIVE的.服务端则开启了复用address.</p>
+<p>主动的心跳探测(默认60s)来关闭连接是更可控的,而不是使用KEEP_ALIVE.</p>
+<h3 id="多路复用">多路复用</h3>
+<p>Server可以采取多路复用等机制来提高面对多Client时的效率. 处理多client经历了几个阶段,为每个连接分配进程,为每个连接分配线程,使用select,使用poll,使用epoll(linux场景)&hellip;</p>
+<p>当然,多路复用只是一个手段.重要是在和业务结合,明白io线程在做什么. 例如如果大量处在wait阶段,说明并没有数据的收发.</p>
+<p>多路复用的目的是降低找到需要处理的连接的开销.他不是一个通信框架的全部.</p>
+<h2 id="dubbo的通信模块">dubbo的通信模块</h2>
+<p>本地调用的几个基本要素为: 方法名,返回类型,参数.</p>
+<p>如何做到远程调用? 就是将这些要素传递给远程即可.</p>
+<p>客户端需要将要调用的方法,调用的参数告知服务端. 服务端接收后,在本地调用客户端指定的方法,并传递对应的参数,再把对应的结果返回给客户端.</p>
+<p>看起来很简单,但是需要处理其中的几个问题.</p>
+<ol>
+<li>客户端和服务端如何保持连接和传递数据?</li>
+<li>客户端如何告知服务端方法和参数,并且服务端能解析出来? 同样的,服务端如何将返回结果告知客户端?</li>
+</ol>
+<h3 id="通信组件">通信组件</h3>
+<p>在dubbo里, 可以使用几个通信框架来实现连接交换数据, 默认的方案是netty.</p>
+<h3 id="io线程">io线程</h3>
+<p>boss只有1个线程,worker线程池则可以通过protocol.iothreads参数来设置,默认为cpu数量+1.当然为了防止浪费线程, 最大数量为32.</p>
+<p>如果一台机器部署了多个dubbo应用,则iothreads是需要考虑的.</p>
+<p>如果是使用容器(容器一般就是一个应用),则该值就是容器被分配的cpu数量+1.</p>
+<h3 id="处理逻辑">处理逻辑</h3>
+<p>dubbo使用netty比较简单,每一个netty的handler都会转给dubbo自己的handler.</p>
+<p>netty的pipeline:</p>
+<ol>
+<li>
+<p>inbound:</p>
+<pre><code class="language-mermaid" data-lang="mermaid">graph LR;
+    decoder--&gt;server/client-idle-handler--&gt;handler
+</code></pre></li>
+<li>
+<p>outbound:</p>
+<pre><code class="language-mermaid" data-lang="mermaid"> graph LR;
+    handler--&gt;server/client-idle-handler--&gt;encoder
+</code></pre></li>
+</ol>
+<p>decode和encode是为了编解码.</p>
+<p>server-idle-handler使用了netty的IdleSateHandler来实现心跳监听.如果超过读/写的idle时间,将会发送一个IdleStatEvent.</p>
+<p>handler的类是NettyServerHandler以及NettyClientHandler,可以处理IdleStatEvent,关闭channel.该类被包装了两层,分别是HeartbeatHandler和AllChannelHandler.</p>
+<p>HeartbeatHandler实现了识别心跳数据的功能.防止进入到业务里去,结合IdleSateHandler会刷新最新的数据读写时间.如果一直没有收到心跳/业务数据,channel将被关闭.</p>
+<p>用户发起请求,进入netty的处理逻辑并阻塞(也支持非阻塞),dubbo为每个请求生成一个全局id,发送请求后,保存在一个map(DefaultFuture)中,接受到返回后,将对应的id取出并返回给用户线程.</p>
+<h3 id="通信协议">通信协议</h3>
+<p><a href="http://dubbo.apache.org/zh-cn/blog/dubbo-protocol.html">dubbo协议</a></p>
+<p>官方介绍了dubbo协议的设计,以及优缺点.</p>
+<h2 id="数据编解码">数据编解码</h2>
+<p>在程序里,数据总是以数据结构的形式存在,要进行网络传输,只能转换为二进制.</p>
+<p>所以编解码成为一个很重要的部分.我们期望的编码是使用方便,版本兼容,编解码效率高,压缩比率高&hellip;&hellip;</p>
+<p>dubbo默认的序列化为hessian2.常用的还有json,protobuff,kryo等.</p>
+<p>dubbo新版本支持grpc,性能提升30%. <a href="http://dubbo.apache.org/zh-cn/blog/2.7.5-release.html">dubbo 2.7.5</a></p>
+<p>json是阅读友好的.在内网带宽充裕调用量不多的情况下,使用json能获得良好的开发体验(</p>
+<p>如果是并发高,压力大的应用,使用pb或者kryo是不错的选择.pb按照位置来保存字段,可以兼容前后版本,前提是顺序不变.kryo则不是兼容的,每次更改字段都需要升级dubbo的版本来升级客户端和服务端.</p>
+
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+        
+    <span class="separator"><a class="tag" href="/tags/java/">java</a><a class="tag" href="/tags/dubbo/">dubbo</a><a class="tag" href="/tags/io/">io</a></span>
+
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-appear.min.js"></script></html></body>
+
+</html>

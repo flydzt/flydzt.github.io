@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>id on FLYDZT</title>
+    <link>https://flydzt.github.io/tags/id/</link>
+    <description>Recent content in id on FLYDZT</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 27 Mar 2020 13:02:49 +0000</lastBuildDate>
+    
+	<atom:link href="https://flydzt.github.io/tags/id/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>发号器的一些想法</title>
+      <link>https://flydzt.github.io/post/%E5%8F%91%E5%8F%B7%E5%99%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E6%83%B3%E6%B3%95/</link>
+      <pubDate>Fri, 27 Mar 2020 13:02:49 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E5%8F%91%E5%8F%B7%E5%99%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E6%83%B3%E6%B3%95/</guid>
+      <description>特性  全局唯一 高qps 易扩缩容 可内嵌  分布式 分布式并不意味需要节点之间的交互.</description>
+    </item>
+    
+  </channel>
+</rss>

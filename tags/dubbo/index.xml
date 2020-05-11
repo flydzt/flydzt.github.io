@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>dubbo on FLYDZT</title>
+    <link>https://flydzt.github.io/tags/dubbo/</link>
+    <description>Recent content in dubbo on FLYDZT</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 22 Apr 2020 20:30:24 +0000</lastBuildDate>
+    
+	<atom:link href="https://flydzt.github.io/tags/dubbo/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>dubbo的配置优先级</title>
+      <link>https://flydzt.github.io/post/dubbo%E7%9A%84%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8A%E4%BC%98%E5%85%88%E7%BA%A7/</link>
+      <pubDate>Wed, 22 Apr 2020 20:30:24 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/dubbo%E7%9A%84%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE%E4%BB%A5%E5%8F%8A%E4%BC%98%E5%85%88%E7%BA%A7/</guid>
+      <description>dubbo的配置优先级 dubbo的配置可以由jvm启动参数-D来配置,也可以通过xml来配置,也可以通过dubbo.properties配置文件来配置.优先级依次从高到低.
+配置加载流程
+如何覆盖 通常我们需要配置application/registry/service/reference等.</description>
+    </item>
+    
+    <item>
+      <title>dubbo的远程通信</title>
+      <link>https://flydzt.github.io/post/dubbo%E7%9A%84%E8%BF%9C%E7%A8%8B%E9%80%9A%E4%BF%A1/</link>
+      <pubDate>Sun, 29 Dec 2019 16:12:04 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/dubbo%E7%9A%84%E8%BF%9C%E7%A8%8B%E9%80%9A%E4%BF%A1/</guid>
+      <description>概览 应用程序的远程通信,无非是Server开一个端口去监听(listen, 例如用一个队列最多阻塞1024个客户端等待accept, 超过的直接拒绝).
+Client进行连接(connect)并拿到一个句柄,Server也拿到(accept, 从监听队列拿出)一个句柄.</description>
+    </item>
+    
+    <item>
+      <title>记一次dubbo压测</title>
+      <link>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1dubbo%E5%8E%8B%E6%B5%8B/</link>
+      <pubDate>Wed, 25 Dec 2019 21:53:13 +0000</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E8%AE%B0%E4%B8%80%E6%AC%A1dubbo%E5%8E%8B%E6%B5%8B/</guid>
+      <description>需求 上线了一个熔断降级功能，想做一个压测看下qps.
+熔断降级非常简单,耗时偏高时返回缓存而不是实时计算.在大压力情况下,只会返回缓存
+执行 一台服务器部署服务,另一台服务器部署客户端进行压测.</description>
+    </item>
+    
+  </channel>
+</rss>
