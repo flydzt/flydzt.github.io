@@ -6,22 +6,10 @@
     <description>Recent content in concurrent on FLYDZT</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 27 Apr 2020 22:54:52 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 11 Apr 2020 12:38:07 +0000</lastBuildDate>
     
 	<atom:link href="https://flydzt.github.io/tags/concurrent/index.xml" rel="self" type="application/rss+xml" />
     
-    
-    <item>
-      <title>同步的一些思考与java实现</title>
-      <link>https://flydzt.github.io/post/%E5%90%8C%E6%AD%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83%E4%B8%8Ejava%E5%AE%9E%E7%8E%B0/</link>
-      <pubDate>Mon, 27 Apr 2020 22:54:52 +0000</pubDate>
-      
-      <guid>https://flydzt.github.io/post/%E5%90%8C%E6%AD%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83%E4%B8%8Ejava%E5%AE%9E%E7%8E%B0/</guid>
-      <description>竞争和同步 多个线程读写某些数据,结果依赖于精确时序,就是竞争.或者说,资源是共享的,状态是重要的,多个线程同时读写,会产生不可预期的结果.
-而同步则是为了让结果唯一(可预测).
-为了同步,需要临界区.首先,不允许两个线程同时处在临界区,其次,不能让一个线程无限期等待进入临界区.
-在临界区之外,一个线程不能阻塞其他线程.</description>
-    </item>
     
     <item>
       <title>aqs基本原理(代码注释)</title>
