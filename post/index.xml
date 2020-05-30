@@ -6,10 +6,22 @@
     <description>Recent content in Posts on FLYDZT</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 11 May 2020 01:06:59 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 29 May 2020 23:47:39 +0800</lastBuildDate>
     
 	<atom:link href="https://flydzt.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Redis的数据一致性的思考</title>
+      <link>https://flydzt.github.io/post/redis%E7%9A%84%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7%E7%9A%84%E6%80%9D%E8%80%83/</link>
+      <pubDate>Fri, 29 May 2020 23:47:39 +0800</pubDate>
+      
+      <guid>https://flydzt.github.io/post/redis%E7%9A%84%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7%E7%9A%84%E6%80%9D%E8%80%83/</guid>
+      <description>背景 面试被问到了redis的数据一致性，一是redis和数据库的一致性，二是多机房redis集群的一致性。
+一致性在分布式系统中是一个很常见的问题，通常会牵扯到cap理论，根据业务场景去具体分析。redis的一致性，更多是针对业务数据而言，这份数据是业务的真实数据。redis需要做到最终和它的数据一致。它可以是db，也可以是文件，可以是另一个redis。
+我所做的业务是广告，投放端是请求量比较少的场景，没有使用redis作为缓存，而是直接读写表。做了频控限制。
+播放端则是一个量很大，但是都是读的场景，没有写。redis会作为广告的缓存，在投放端进行广告增删改后，会增量地修改redis里的数据。为保证一致，也会有定期的全量覆盖。例如我重启了投放端，投放端此时刚好写入了db但没有更新redis，那么需要全量的机制来保证一致。</description>
+    </item>
     
     <item>
       <title>Orange读书笔记-引导程序</title>

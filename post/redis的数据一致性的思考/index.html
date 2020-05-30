@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> flydzt | Redis的数据一致性的思考 </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.71.1" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="解决一类问题而不是一个问题">
+    <link rel="stylesheet" href="https://flydzt.github.io/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="https://flydzt.github.io">
+    
+    <link rel="shortcut icon" href="https://flydzt.github.io/images/hhh.jpgfavicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://flydzt.github.io/images/hhh.jpgapple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://flydzt.github.io/images/hhh.jpgfavicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://flydzt.github.io/images/hhh.jpgfavicon-16x16.png">
+
+    <link rel="canonical" href="https://flydzt.github.io/post/redis%E7%9A%84%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7%E7%9A%84%E6%80%9D%E8%80%83/">
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="https://flydzt.github.io/images/hhh.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">FLYDZT</a></h3>
+        <div class="description">
+          <p>解决一类问题而不是一个问题</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://github.com/flydzt" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; flydzt 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>Redis的数据一致性的思考
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Fri, May 29, 2020</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">1-minute read</span>
+        </div>
+        
+        </div>
+
+    <h2 id="背景">背景</h2>
+<p>面试被问到了redis的数据一致性，一是redis和数据库的一致性，二是多机房redis集群的一致性。</p>
+<p>一致性在分布式系统中是一个很常见的问题，通常会牵扯到cap理论，根据业务场景去具体分析。redis的一致性，更多是针对业务数据而言，这份数据是业务的真实数据。redis需要做到最终和它的数据一致。它可以是db，也可以是文件，可以是另一个redis。</p>
+<p>我所做的业务是广告，投放端是请求量比较少的场景，没有使用redis作为缓存，而是直接读写表。做了频控限制。</p>
+<p>播放端则是一个量很大，但是都是读的场景，没有写。redis会作为广告的缓存，在投放端进行广告增删改后，会增量地修改redis里的数据。为保证一致，也会有定期的全量覆盖。例如我重启了投放端，投放端此时刚好写入了db但没有更新redis，那么需要全量的机制来保证一致。</p>
+<p>广告从播放到事件数据的采集本身就存在一定的周期。所以缓存短期的不一致是可以忍受的。</p>
+<p>我们目前的做法是：</p>
+<ol start="0">
+<li>所有广告信息都是热点数据，所以都会存放在redis中，部署新机房时，我们会先进行全量刷新，再对外提供服务</li>
+<li>读的时候优先读取redis内的内容，如果redis内不存在，则当作不存在(这种一般发生在 id真的不存在 或者 在写入db之后写入redis之前被重启了，可以等全量的更新）。</li>
+<li>写的时候，写入db后，再将redis内对应的内容进行更新。</li>
+<li>定时全量更新。</li>
+</ol>
+<p>这样也会存在问题，因为全量更新和单条的更新有顺序问题，可能全量更新是旧数据(可以通过时间戳来解决)。所以只能保证在全量的周期内，大部分的key都是ok的，少量的key存在一定的延迟。只能等下一个全量的周期。</p>
+<p>一般来说，只要有多个并发的更新线程，必然存在顺序问题。</p>
+<p>事后问了下同事关于redis的同步问题，原来公司内部其实有对应的中间件实现。接下来讲一讲我对redis和数据库间的同步和redis集群间的同步的思考。</p>
+<h2 id="redis和数据库的一致性">redis和数据库的一致性</h2>
+<p>一般业务场景都可以接受redis的数据略迟于数据库。最重要的还是按照业务去分析。</p>
+<p>我们的帐务扣费，由于单行的mysql最高的并发只能到几百，所以会使用redis和mq来缓冲，redis可以快速响应余额的变化，mq堆积扣费的任务。消费mq写入mysql真正持久化。这时候业务需要保证mysql和redis最终一致。</p>
+<h3 id="通用的方案">通用的方案</h3>
+<p>在《Redis开发与运维》第11章缓存与设计中提到</p>
+<ul>
+<li>低一致性业务建议配置最大内存和淘汰策略的方式使用。</li>
+<li>高一致性业务可以结合使用超时剔除和主动更新，这样即使主动更新出了问题，也能保证数据过期时间后删除脏数据。</li>
+</ul>
+<p>上述两点的思路比较简单，一是靠redis的最大内存来维持热点，满了之后删掉旧缓存，二是靠过期和业务更新来维持。</p>
+<p>如果热点数据缓存击穿和一定时间的不一致性都能忍受，方案也就呼之欲出了：</p>
+<ol>
+<li>读的时候优先读取redis内的内容，如果redis内不存在，则读取db，并更新到redis，并设置过期时间。</li>
+<li>写的时候，写入db后，将redis对应的key删除(或者更新到redis，设置过期时间)。</li>
+</ol>
+<h3 id="不过期简单方案的问题-更新顺序和缓存击穿">不过期简单方案的问题: 更新顺序和缓存击穿</h3>
+<p>但是如果我想保证所有key毫秒级别的一致性呢，我先想了一个简单的方案：</p>
+<ol>
+<li>读的时候优先读取redis内的内容，如果redis内不存在，则读取db。</li>
+<li>写的时候，写入db后，再将redis内对应的内容进行更新。</li>
+</ol>
+<p>或者</p>
+<ol>
+<li>读的时候优先读取redis内的内容，如果redis内不存在，则读取db，存入redis。</li>
+<li>写的时候，写入db后，再将redis内的内容删除。</li>
+</ol>
+<p>差别在于更新redis的动作发生在读还是写。</p>
+<p>但是仔细一想，写的多线程同时更新同一行数据的时候，会存在顺序问题。可能先更新db的后更新redis,后更新db先更新redis。</p>
+<p>而读的多个线程同时更新，中间有一个写的操作，多个线程读取到的内容不一致，更新到redis也会存在顺序问题。</p>
+<p>将redis中的热点数据删掉会出现缓存击穿的情况。如果有热点数据，则不应该将redis内的内容删除。</p>
+<h3 id="问题的解决">问题的解决</h3>
+<p>简单来说：时间戳比较 解决顺序问题，状态维护 解决缓存击穿问题。</p>
+<p>顺序问题可以加上时间戳比较，例如使用id:time这个key来表示上次更新时间(是mysql中的updatetime)。更新的时候保证时间戳更大则更新，否则不更新。</p>
+<p>状态维护使用id:stat来维护，不存在表示过期，为0表示正常，1表示更新中。针对正常和更新中的数据，使用缓存即可。</p>
+<ol>
+<li>读的时候优先读取redis内的内容，如果redis数据(id:stat不存在)为过期，则更新状态为更新中,并且将id:stat设置5s过期时间，防止进程挂掉没有真正更新(这两步需要是原子的)，之后读取db并查看更新时间是否比我小，否则不更新。如果更新了内容则将状态更新为正常(这两步也需要是原子的)</li>
+<li>写的时候，写入db后，将id:stat删除。</li>
+</ol>
+<p>更新的过程可以是异步的，防止阻塞主流程的进行。</p>
+<p>原子操作的前提是这几个key需要在同一个节点上，更确切地说同一个slot里。可以通过增加后缀的形式来hash到同一个slot里，只要保证每次循环的起点不变，则总是能拿到相同的后缀，每次拿到同一个key。</p>
+<p>或者使用hash结构来捆绑内容和状态和时间。但是这样需要使用序列化来存储数据而不是redis的hash结构。我们知道redis中的hash在field少于512个，value长度小于64的时候，是会进行压缩的。redis官方也推荐使用hash来保存对象的kv。</p>
+<p>如果不在乎缓存击穿，则可以放弃状态维护，在内容上使用过期时间。不在乎缓存一段时间使用旧值，则可以放弃使用时间戳。两者都放弃的话就是一开始的通用方案了。</p>
+<p>最大的问题就是这样做太复杂了。或者我没想到更优雅的方式。</p>
+<h3 id="binlogmq来保证一致性">binlog+mq来保证一致性</h3>
+<p>更好的方式应该是放弃在读写业务中来维护redis状态，使用binlog和mq的顺序性来保证redis里总是最新的数据。</p>
+<ol>
+<li>订阅mysql的binlog，转为业务可处理的任务，通过mq投递给业务处理，业务将其更新到redis中。</li>
+</ol>
+<p>或者</p>
+<ol>
+<li>订阅mysql的binlog，根据映射规则更新到redis中。</li>
+</ol>
+<p>公司内部有一个binlog+mq的解决方案,是用来同步数据库之间的数据的，也可以用来同步到redis里。只需要业务方写好对应的配置文件即可：mysql和redis信息，映射关系。业务需要处理的问题，转给中间件去处理。中间件来保证顺序性和高可用。</p>
+<h2 id="redis集群之间的同步">redis集群之间的同步</h2>
+<p>TODO</p>
+
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+        
+    <span class="separator"><a class="tag" href="/tags/redis/">redis</a></span>
+
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-appear.min.js"></script></html></body>
+
+</html>
