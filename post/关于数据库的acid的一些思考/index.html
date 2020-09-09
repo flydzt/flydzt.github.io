@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title> flydzt | 关于数据库的acid的一些思考 </title>
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.74.3" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="description" content="解决一类问题而不是一个问题">
+    <link rel="stylesheet" href="https://flydzt.github.io/css/style.css" type="text/css">
+    
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <base href="https://flydzt.github.io">
+    
+    <link rel="shortcut icon" href="https://flydzt.github.io/images/hhh.jpgfavicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://flydzt.github.io/images/hhh.jpgapple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://flydzt.github.io/images/hhh.jpgfavicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://flydzt.github.io/images/hhh.jpgfavicon-16x16.png">
+
+    <link rel="canonical" href="https://flydzt.github.io/post/%E5%85%B3%E4%BA%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84acid%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83/">
+</head><body><div class="sidebar animated fadeInDown">
+    <div class="logo-title">
+      <div class="title">
+        <img src="https://flydzt.github.io/images/hhh.jpg" alt="profile picture" style="width:127px;border-radius: 50%;">
+        <h3 title=""><a href="/">FLYDZT</a></h3>
+        <div class="description">
+          <p>解决一类问题而不是一个问题</p>
+        </div>
+      </div>
+    </div>
+    <ul class="social-links">
+        
+        <a href="https://github.com/flydzt" rel="me" >
+          <i class="fa fa-github" aria-hidden="true" title="GitHub"></i>
+        </a>
+        
+    </ul>
+    <div class="footer">
+        <div class="by_farbox">&copy; flydzt 2020 </div>
+      </div>
+    </div>
+</div><div class="main">
+            <div class="page-top animated fadeInDown">
+    <div class="nav">
+        
+        
+        <li><a  href="/post/" title="">Posts</a></li>
+
+        
+        <li><a  href="/about/" title="">About</a></li>
+
+        
+    </div>
+</div>
+            <div class="autopagerize_page_element">
+                <div class="content">
+<div class="post animated fadeInDown">
+    <div class="post-content">
+
+      <div class="post-title">
+        <h3>关于数据库的acid的一些思考
+        </h3>
+        
+        <div class="info">
+          <i class="fa fa-sun-o"></i><span class="date">Wed, Sep 9, 2020</span>
+          <i class="fa fa-clock-o"></i><span class="reading-time">1-minute read</span>
+        </div>
+        
+        </div>
+
+    <h2 id="acid">ACID</h2>
+<p>ACID是为了保证事务正确可靠而提出的,和分布式的CAP理论中的CA还是有差别的。</p>
+<p>&ldquo;A&quot;表示原子性(Atomicity),一个事务应当完全执行或者完全不执行。</p>
+<p>&ldquo;C&quot;表示一致性(Consistency),这个一致性是业务上的一致性,数据库保证AID,那么业务就可以实现C。数据库提供了一些手段让业务更方便地实现C。</p>
+<p>&ldquo;I&quot;表示隔离性(Isolation),事务之间是隔离的,一个事务执行的时候,对它来说仿佛没有别的事务在执行。</p>
+<p>&ldquo;D&quot;表示执行性(Durability),事务完成后,对数据库的改变是不会丢失的。</p>
+<p>理解A和D都是不难的。不需要额外的知识。</p>
+<h2 id="i">I</h2>
+<p>理解I需要明白隔离等级,在MYSQL中,隔离等级分为READ UNCOMMITTED、READ COMMITTED、REPEATABLE READ 和 SERIALIZABLE.</p>
+<p>假设有一个表,有三行,id分别为1,2,3.有一列name为a,b,c</p>
+<p>事务1和事务2分别执行。</p>
+<p>如果两者的顺序为:</p>
+<p>1开始 &ndash;&gt; 读取1的name(1) &ndash;&gt; 啥也不做 &ndash;&gt; 读取1的name(2) &ndash;&gt; 提交</p>
+<p>2开始 &ndash;&gt; 啥也不做 &ndash;&gt; 修改id为1的name为x &ndash;&gt; 啥也不做 &ndash;&gt; 啥也不做 &ndash;&gt; 提交</p>
+<p>如果事务1第一次读取到a,第二次读取到x,那么事务1很明显是感知到了事务2的存在。这是READ UNCOMMITTED,读未提交。</p>
+<p>如果两者的顺序为:</p>
+<p>1开始 &ndash;&gt; 读取1的name(1) &ndash;&gt; 啥也不做 &ndash;&gt; 啥也不做 &ndash;&gt; 读取1的name(2) &ndash;&gt; 提交</p>
+<p>2开始 &ndash;&gt; 啥也不做 &ndash;&gt; 修改id为1的name为x &ndash;&gt; 提交</p>
+<p>如果事务1第一次读取到a,第二次读取到x,那么事务1很明显是感知到了事务2的提交。这是READ COMMITTED,读已提交。</p>
+<p>这里和上面流程的不一样的地方在与事务2先提交，事务1再去读。如果事务2不先提交，那么事务1两次都该读到a而不是第二次读到x。</p>
+<p>如果想要事务1无论如何两次都读到a，那么需要REPEATABLE READ,重复读，也就是只要事务1不提交，那id为1的那一行在他执行期间不会被别的事务影响。</p>
+<p>但考虑以下情况，如果两者的顺序为:</p>
+<p>1开始 &ndash;&gt; 查询数量(1) &ndash;&gt; 啥也不做 &ndash;&gt; 啥也不做 &ndash;&gt; 查询数量(2) &ndash;&gt; 提交</p>
+<p>2开始 &ndash;&gt; 啥也不做 &ndash;&gt; 插入id为4的name为d &ndash;&gt; 提交</p>
+<p>事务1两次读取到的数量会是不一样的，第一次为3，第二次为4，因为这个隔离等级（包括更低的等级）只保证了它影响的行，不保证新增和删除的行。</p>
+<p>SERIALIZABLE 串行化是不能并行执行的，那么就不存在并发的问题。</p>
+<h2 id="c">C</h2>
+<p>C的理解比较抽象，像银行转账，一个帐号减少金额，另一个帐号增加金额，但是帐号的金额不能少于0。</p>
+<p>这种余额大于0的判断数据库可以做，写成事务也可以，</p>
+<p>C我倾向于是数据库能实现业务上的逻辑。</p>
+
+    </div>
+    <div class="post-footer">
+      <div class="info">
+        
+        
+      </div>
+    </div>
+
+    
+           
+    
+</div>
+
+
+                </div>
+            </div>
+        </div>
+</body>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-migrate.min.js"></script>
+<script type="text/javascript" src="https://flydzt.github.io/js/jquery-appear.min.js"></script></html></body>
+
+</html>

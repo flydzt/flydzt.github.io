@@ -6,10 +6,22 @@
     <description>Recent content on FLYDZT</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 29 May 2020 23:47:39 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 09 Sep 2020 23:33:12 +0800</lastBuildDate>
     
 	<atom:link href="https://flydzt.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>关于数据库的acid的一些思考</title>
+      <link>https://flydzt.github.io/post/%E5%85%B3%E4%BA%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84acid%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83/</link>
+      <pubDate>Wed, 09 Sep 2020 23:33:12 +0800</pubDate>
+      
+      <guid>https://flydzt.github.io/post/%E5%85%B3%E4%BA%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84acid%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83/</guid>
+      <description>ACID ACID是为了保证事务正确可靠而提出的,和分布式的CAP理论中的CA还是有差别的。
+&amp;ldquo;A&amp;quot;表示原子性(Atomicity),一个事务应当完全执行或者完全不执行。
+&amp;ldquo;C&amp;quot;表示一致性(Consistency),这个一致性是业务上的一致性,数据库保证AID,那么业务就可以实现C。数据库提供了一些手段让业务更方便地实现C。
+&amp;ldquo;I&amp;quot;表示隔离性(Isolation),事务之间是隔离的,一个事务执行的时候,对它来说仿佛没有别的事务在执行。</description>
+    </item>
     
     <item>
       <title>Redis的数据一致性的思考</title>
