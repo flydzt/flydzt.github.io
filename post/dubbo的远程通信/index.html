@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head>
     <title> flydzt | dubbo的远程通信 </title>
-    <meta charset="utf-8"><meta name="generator" content="Hugo 0.74.3" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta charset="utf-8"><meta name="generator" content="Hugo 0.79.0" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="description" content="解决一类问题而不是一个问题">
     <link rel="stylesheet" href="https://flydzt.github.io/css/style.css" type="text/css">
     
@@ -70,7 +70,7 @@
 <h3 id="tcp_no_delaykeep_alive">TCP_NO_DELAY/KEEP_ALIVE</h3>
 <p>在使用时,可以根据场景做一些优化.例如可以关闭nagle算法来降低延迟,但是增加了发包的次数.</p>
 <p>由于协议是分层的,在tcp层增加包的数量,同时需要传递链路层传输层重复的信息(本来可以在一个包里,为了减少延迟而拆开了),而应用的协议比tcp层更高,又进一步降低了一个包中信息的有效比例.</p>
-<p>在传输信息量少的时候更甚.虽然看着带宽占了很多,但是大多数数据是为了拆包和相应的ack而导致的,和业务无关. 简言之就是&quot;空间&rdquo;(信道容量)换&quot;时间&rdquo;(延迟).</p>
+<p>在传输信息量少的时候更甚.虽然看着带宽占了很多,但是大多数数据是为了拆包和相应的ack而导致的,和业务无关. 简言之就是&quot;空间&quot;(信道容量)换&quot;时间&quot;(延迟).</p>
 <p>网络传输繁忙也意味着大量的中断,为提高效率可以合并发送.</p>
 <p>通常,业务的数据进入系统调用后(write调用成功只是进入缓冲区,write阻塞说明缓冲区已满.为重试需要,只有收到对方ack才会清理缓冲区内容)就认为发送成功了,但这部分数据可能还未真正发送,并且可能丢包(重试由系统保证). 由此可能会产生很多无意义的数据发送(服务端认为未超时,但是由于发送不及时或丢包重试,客户端认为超时了).</p>
 <p>KEEP_ALIVE则是定时去探测某个连接是否可用.dubbo的客户端是开启TCP_KEEP_ALIVE的.服务端则开启了复用address.</p>

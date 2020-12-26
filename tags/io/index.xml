@@ -6,11 +6,7 @@
     <description>Recent content in io on FLYDZT</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 29 Dec 2019 16:12:04 +0000</lastBuildDate>
-    
-	<atom:link href="https://flydzt.github.io/tags/io/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Sun, 29 Dec 2019 16:12:04 +0000</lastBuildDate><atom:link href="https://flydzt.github.io/tags/io/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>dubbo的远程通信</title>
       <link>https://flydzt.github.io/post/dubbo%E7%9A%84%E8%BF%9C%E7%A8%8B%E9%80%9A%E4%BF%A1/</link>
